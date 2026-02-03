@@ -40,6 +40,18 @@ public class MainFrame extends JFrame {
     contentArea = new JPanel(cardLayout);
     contentArea.setBackground(Theme.BACKGROUND);
 
+    // --- KHỞI TẠO CÁC MÀN HÌNH TƯƠNG ỨNG VỚI SIDEBAR ---
+    // (Tạm thời dùng JPanel rỗng để test nút, sau này bạn replace bằng GUI thật)
+    contentArea.add(new JPanel(), "Trang chủ");
+    contentArea.add(new JPanel(), "Bán hàng");
+    contentArea.add(new JPanel(), "Sản phẩm");
+    contentArea.add(new JPanel(), "Nhập hàng");
+    contentArea.add(new JPanel(), "Khách hàng");
+    contentArea.add(new JPanel(), "Nhà cung cấp"); // Mới thêm
+    contentArea.add(new JPanel(), "Nhân viên");
+    contentArea.add(new JPanel(), "Thống kê");
+    contentArea.add(new JPanel(), "Phân quyền");   // Mới thêm
+
     // Tạo màn hình chào mừng
     JPanel pnlWelcome = new JPanel(new GridBagLayout());
     pnlWelcome.add(new JLabel("HỆ THỐNG QUẢN LÝ BÁN SÁCH TRỰC TUYẾN"));
