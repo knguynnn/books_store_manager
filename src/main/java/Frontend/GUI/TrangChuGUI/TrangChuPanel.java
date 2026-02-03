@@ -5,6 +5,7 @@ import java.awt.*;
 public class TrangChuPanel extends JPanel{
     public TrangChuPanel(){
         setLayout(new BorderLayout());
+        setBackground(Color.WHITE);
         add(new JLabel("MÀN HÌNH TRANG CHỦ", SwingConstants.CENTER), BorderLayout.CENTER);
     }
 }

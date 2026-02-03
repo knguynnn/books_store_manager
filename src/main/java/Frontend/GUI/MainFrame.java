@@ -1,6 +1,16 @@
 package Frontend.GUI;
 
 import Frontend.Compoent.Theme;
+import Frontend.GUI.BanHangGUI.BanHangPanel;
+import Frontend.GUI.KhachHangGUI.KhachHangPanel;
+import Frontend.GUI.NhaCungCapGUI.NhaCungCapPanel;
+import Frontend.GUI.NhanVienGUI.NhanVienPanel;
+import Frontend.GUI.NhapHangGUI.NhapHangPanel;
+import Frontend.GUI.PhanQuyenGUI.PhanQuyenPanel;
+import Frontend.GUI.SanPhamGUI.SanPhamPanel;
+import Frontend.GUI.ThongKeGUI.ThongKePanel;
+import Frontend.GUI.TrangChuGUI.TrangChuPanel;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -42,15 +52,15 @@ public class MainFrame extends JFrame {
 
     // --- KHỞI TẠO CÁC MÀN HÌNH TƯƠNG ỨNG VỚI SIDEBAR ---
     // (Tạm thời dùng JPanel rỗng để test nút, sau này bạn replace bằng GUI thật)
-    contentArea.add(new JPanel(), "Trang chủ");
-    contentArea.add(new JPanel(), "Bán hàng");
-    contentArea.add(new JPanel(), "Sản phẩm");
-    contentArea.add(new JPanel(), "Nhập hàng");
-    contentArea.add(new JPanel(), "Khách hàng");
-    contentArea.add(new JPanel(), "Nhà cung cấp"); // Mới thêm
-    contentArea.add(new JPanel(), "Nhân viên");
-    contentArea.add(new JPanel(), "Thống kê");
-    contentArea.add(new JPanel(), "Phân quyền");   // Mới thêm
+    contentArea.add(new TrangChuPanel(), "Trang chủ");
+    contentArea.add(new BanHangPanel(), "Bán hàng");
+    contentArea.add(new SanPhamPanel(), "Sản phẩm");
+    contentArea.add(new NhapHangPanel(), "Nhập hàng");
+    contentArea.add(new KhachHangPanel(), "Khách hàng");
+    contentArea.add(new NhaCungCapPanel(), "Nhà cung cấp"); // Mới thêm
+    contentArea.add(new NhanVienPanel(), "Nhân viên");
+    contentArea.add(new ThongKePanel(), "Thống kê");
+    contentArea.add(new PhanQuyenPanel(), "Phân quyền");   // Mới thêm
 
     // Tạo màn hình chào mừng
     JPanel pnlWelcome = new JPanel(new GridBagLayout());

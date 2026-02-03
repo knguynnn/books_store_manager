@@ -5,6 +5,7 @@ import java.awt.*;
 public class SanPhamPanel extends JPanel {
     public SanPhamPanel() {
         setLayout(new BorderLayout());
+        setBackground(Color.WHITE);
         add(new JLabel("MÀN HÌNH QUẢN LÝ SẢN PHẨM - KHO ", SwingConstants.CENTER), BorderLayout.CENTER);
     }
 }
