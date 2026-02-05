@@ -25,7 +25,6 @@ public class Sidebar extends JPanel {
         pnlMenu.setOpaque(false);
         pnlMenu.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 5));
 
-        // Logo
         JLabel lbLogo = new JLabel("BOOK STORE", SwingConstants.CENTER);
         lbLogo.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lbLogo.setForeground(Theme.ACCENT);
@@ -33,57 +32,54 @@ public class Sidebar extends JPanel {
         lbLogo.setPreferredSize(new Dimension(250, 100));
         pnlMenu.add(lbLogo);
 
-        // --- DANH SÁCH MENU CHÍNH XÁC ---
         String[][] menuItems = {
-            {"Trang chủ", "home.svg"},
-            {"Bán hàng", "shopping-basket.svg"},
-            {"Sản phẩm", "dock.svg"},
-            {"Nhập hàng", "circle-plus.svg"},
-            {"Khách hàng", "file-user.svg"},
-            {"Nhà cung cấp", "ncc.svg"},
-            {"Nhân viên", "square-user.svg"},
-            {"Thống kê", "thongke.svg"},
-            {"Phân quyền", "shield-check.svg"}
+            {"Trang chủ", "home.svg"}, {"Bán hàng", "shopping-basket.svg"}, {"Sản phẩm", "dock.svg"},
+            {"Nhập hàng", "circle-plus.svg"}, {"Khách hàng", "file-user.svg"}, {"Nhà cung cấp", "ncc.svg"},
+            {"Nhân viên", "square-user.svg"}, {"Thống kê", "thongke.svg"}, {"Phân quyền", "shield-check.svg"}
         };
 
         for (String[] item : menuItems) {
             JButton btn = createMenuButton(item[0], item[1]);
             pnlMenu.add(btn);
             listButtons.add(btn);
-            
             btn.addActionListener(e -> {
-                setActiveButton(btn);
-                if (item[0].equals("Trang chủ")) {
-                    mainFrame.backToHome(); // Quay lại HOME_VIEW (Portal)
-                } else {
-                    mainFrame.showCard(item[0]); // Chuyển Card nghiệp vụ
-                }
+                if (item[0].equals("Trang chủ")) mainFrame.backToHome();
+                else mainFrame.switchView(item[0]);
             });
         }
         this.add(pnlMenu, BorderLayout.CENTER);
 
-        // Nút Đăng xuất
+        // --- NÚT ĐĂNG XUẤT HÌNH CHỮ NHẬT MÀU ĐỎ ---
         JPanel pnlBottom = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 20));
         pnlBottom.setOpaque(false);
-        JButton btnLogout = new JButton(" Đăng xuất");
+        JButton btnLogout = new JButton(" Đăng xuất") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getModel().isPressed() ? Theme.DANGER_COLOR.darker() : (getModel().isRollover() ? new Color(220, 38, 38) : Theme.DANGER_COLOR));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
         btnLogout.setIcon(new FlatSVGIcon("images/icon/log-out.svg", 20, 20));
-        btnLogout.setPreferredSize(new Dimension(230, 50));
+        btnLogout.setPreferredSize(new Dimension(210, 45));
         btnLogout.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        btnLogout.setForeground(Theme.DANGER_COLOR);
+        btnLogout.setForeground(Color.WHITE);
         btnLogout.setFocusPainted(false);
         btnLogout.setBorderPainted(false);
         btnLogout.setContentAreaFilled(false);
         btnLogout.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnLogout.addActionListener(e -> System.exit(0));
+
         pnlBottom.add(btnLogout);
         this.add(pnlBottom, BorderLayout.SOUTH);
     }
 
     private JButton createMenuButton(String text, String iconName) {
         JButton btn = new JButton(" " + text);
-        try {
-            btn.setIcon(new FlatSVGIcon("images/icon/" + iconName, 20, 20));
-        } catch (Exception e) {}
+        try { btn.setIcon(new FlatSVGIcon("images/icon/" + iconName, 20, 20)); } catch (Exception e) {}
         btn.setPreferredSize(new Dimension(230, 45));
         btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btn.setForeground(Color.WHITE);
@@ -97,9 +93,7 @@ public class Sidebar extends JPanel {
     }
 
     public void setActiveButton(JButton activeBtn) {
-        for (JButton btn : listButtons) {
-            btn.setBackground(Theme.PRIMARY);
-        }
+        for (JButton btn : listButtons) btn.setBackground(Theme.PRIMARY);
         activeBtn.setBackground(new Color(30, 41, 59));
     }
 
