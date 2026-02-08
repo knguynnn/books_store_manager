@@ -3,6 +3,8 @@ package Frontend.GUI;
 import Frontend.Compoent.Theme;
 import javax.swing.*;
 import java.awt.*;
+
+import Frontend.GUI.KhachHangGUI.KhachHangPanel;
 import Frontend.GUI.TrangChuGUI.TrangChuPanel;
 
 public class MainFrame extends JFrame {
@@ -12,6 +14,7 @@ public class MainFrame extends JFrame {
     private Header header;
     private JPanel contentArea;
     private CardLayout contentLayout;
+    private TrangChuPanel homeView;
 
     public MainFrame() {
         initComponent();
@@ -26,15 +29,18 @@ public class MainFrame extends JFrame {
         rootLayout = new CardLayout();
         rootPanel = new JPanel(rootLayout);
 
-        // --- MÀN HÌNH 1: PORTAL ---
-        TrangChuPanel homeView = new TrangChuPanel(this);
+        // --- MÀN HÌNH 1: TRANG CHỦ (PORTAL) ---
+        homeView = new TrangChuPanel(this);
         rootPanel.add(homeView, "HOME_VIEW");
 
-        // --- MÀN HÌNH 2: GIAO DIỆN CHÍNH ---
+        // --- MÀN HÌNH 2: GIAO DIỆN QUẢN LÝ CHÍNH ---
         JPanel pnlApp = new JPanel(new BorderLayout());
+        
+        // Sidebar bên trái
         sidebar = new Sidebar(this);
         pnlApp.add(sidebar, BorderLayout.WEST);
 
+        // Phần nội dung bên phải (Header + Content Area)
         JPanel pnlRight = new JPanel(new BorderLayout());
         header = new Header();
         pnlRight.add(header, BorderLayout.NORTH);
@@ -43,34 +49,55 @@ public class MainFrame extends JFrame {
         contentArea = new JPanel(contentLayout);
         contentArea.setBackground(Theme.BACKGROUND);
         
-        // Đăng ký các trang nghiệp vụ (Khớp chính xác với text ở Sidebar)
-        String[] pages = {"Bán hàng", "Sản phẩm", "Nhập hàng", "Khách hàng", "Nhà cung cấp", "Nhân viên", "Thống kê", "Phân quyền"};
+        // --- ĐĂNG KÝ CÁC TRANG NGHIỆP VỤ ---
+        
+        // 1. Trang Khách hàng (Sử dụng Panel thực tế bạn đang làm)
+        contentArea.add(new KhachHangPanel(), "Khách hàng");
+        
+        // 2. Đăng ký các trang khác dưới dạng Placeholder
+        String[] pages = {"Bán hàng", "Sản phẩm", "Nhập hàng", "Nhà cung cấp", "Nhân viên", "Thống kê", "Phân quyền"};
         for (String page : pages) {
             JPanel pnlPlaceholder = new JPanel(new GridBagLayout());
-            pnlPlaceholder.add(new JLabel("GIAO DIỆN TRANG: " + page.toUpperCase()));
+            pnlPlaceholder.setBackground(Theme.BACKGROUND);
+            JLabel lbl = new JLabel("GIAO DIỆN TRANG: " + page.toUpperCase());
+            lbl.setFont(new Font("Segoe UI", Font.ITALIC, 20));
+            pnlPlaceholder.add(lbl);
             contentArea.add(pnlPlaceholder, page);
         }
         
         pnlRight.add(contentArea, BorderLayout.CENTER);
         pnlApp.add(pnlRight, BorderLayout.CENTER);
 
+        // Thêm giao diện chính vào Root
         rootPanel.add(pnlApp, "MAIN_VIEW");
+        
         add(rootPanel);
+        
+        // Luôn hiển thị Trang chủ đầu tiên khi mở máy
         rootLayout.show(rootPanel, "HOME_VIEW");
     }
 
+    /**
+     * Chuyển từ Trang chủ vào các trang nghiệp vụ (không hiệu ứng)
+     */
     public void switchView(String businessName) {
         rootLayout.show(rootPanel, "MAIN_VIEW");
         showCard(businessName);
-        sidebar.setMenuSelected(businessName); 
+        sidebar.setMenuSelected(businessName);
     }
 
-    public void backToHome() {
-        rootLayout.show(rootPanel, "HOME_VIEW");
-    }
-
+    /**
+     * Chuyển đổi giữa các trang con trong vùng Content
+     */
     public void showCard(String name) {
         contentLayout.show(contentArea, name);
-        header.setTitle(name);
+        header.setTitle(name.toUpperCase());
+    }
+
+    /**
+     * Quay lại màn hình Trang chủ (Portal)
+     */
+    public void backToHome() {
+        rootLayout.show(rootPanel, "HOME_VIEW");
     }
 }
