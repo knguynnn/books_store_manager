@@ -1,73 +1,107 @@
 package Frontend.GUI;
 
 import Frontend.Compoent.Theme;
-import Frontend.GUI.BanHangGUI.BanHangPanel;
-import Frontend.GUI.KhachHangGUI.KhachHangPanel;
-import Frontend.GUI.NhaCungCapGUI.NhaCungCapPanel;
-import Frontend.GUI.NhanVienGUI.NhanVienPanel;
-import Frontend.GUI.NhapHangGUI.NhapHangPanel;
-import Frontend.GUI.PhanQuyenGUI.PhanQuyenPanel;
-import Frontend.GUI.SanPhamGUI.SanPhamPanel;
-import Frontend.GUI.ThongKeGUI.ThongKePanel;
-import Frontend.GUI.TrangChuGUI.TrangChuPanel;
-
 import javax.swing.*;
 import java.awt.*;
 
+import Frontend.GUI.KhachHangGUI.KhachHangPanel;
+import Frontend.GUI.NhanVienGUI.NhanVienPanel;
+import Frontend.GUI.TrangChuGUI.TrangChuPanel;
+
 public class MainFrame extends JFrame {
-    private JPanel sidebar;
+    private CardLayout rootLayout;
+    private JPanel rootPanel;
+    private Sidebar sidebar;
     private Header header;
     private JPanel contentArea;
-    private CardLayout cardLayout;
+    private CardLayout contentLayout;
+    private TrangChuPanel homeView;
 
     public MainFrame() {
         initComponent();
     }
 
-    public void showCard(String name) {
-        cardLayout.show(contentArea, name);
-        header.setTitle(name);
+    private void initComponent() {
+        setTitle("HỆ THỐNG QUẢN LÝ CỬA HÀNG SÁCH");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(1400, 900);
+        setLocationRelativeTo(null);
+
+        rootLayout = new CardLayout();
+        rootPanel = new JPanel(rootLayout);
+
+        // --- MÀN HÌNH 1: TRANG CHỦ (PORTAL) ---
+        homeView = new TrangChuPanel(this);
+        rootPanel.add(homeView, "HOME_VIEW");
+
+        // --- MÀN HÌNH 2: GIAO DIỆN QUẢN LÝ CHÍNH ---
+        JPanel pnlApp = new JPanel(new BorderLayout());
+        
+        // Sidebar bên trái
+        sidebar = new Sidebar(this);
+        pnlApp.add(sidebar, BorderLayout.WEST);
+
+        // Phần nội dung bên phải (Header + Content Area)
+        JPanel pnlRight = new JPanel(new BorderLayout());
+        header = new Header();
+        pnlRight.add(header, BorderLayout.NORTH);
+
+        contentLayout = new CardLayout();
+        contentArea = new JPanel(contentLayout);
+        contentArea.setBackground(Theme.BACKGROUND);
+        
+        // --- ĐĂNG KÝ CÁC TRANG NGHIỆP VỤ ---
+        
+        // 1. Trang Khách hàng (Sử dụng Panel thực tế bạn đang làm)
+        contentArea.add(new KhachHangPanel(), "Khách hàng");
+        
+        // 1.2 Trang Nhân viên
+        contentArea.add(new NhanVienPanel(), "Nhân viên");
+        
+        // 2. Đăng ký các trang khác dưới dạng Placeholder
+        String[] pages = {"Bán hàng", "Sản phẩm", "Nhập hàng", "Nhà cung cấp", "Thống kê", "Phân quyền"};
+        for (String page : pages) {
+            JPanel pnlPlaceholder = new JPanel(new GridBagLayout());
+            pnlPlaceholder.setBackground(Theme.BACKGROUND);
+            JLabel lbl = new JLabel("GIAO DIỆN TRANG: " + page.toUpperCase());
+            lbl.setFont(new Font("Segoe UI", Font.ITALIC, 20));
+            pnlPlaceholder.add(lbl);
+            contentArea.add(pnlPlaceholder, page);
+        }
+        
+        pnlRight.add(contentArea, BorderLayout.CENTER);
+        pnlApp.add(pnlRight, BorderLayout.CENTER);
+
+        // Thêm giao diện chính vào Root
+        rootPanel.add(pnlApp, "MAIN_VIEW");
+        
+        add(rootPanel);
+        
+        // Luôn hiển thị Trang chủ đầu tiên khi mở máy
+        rootLayout.show(rootPanel, "HOME_VIEW");
     }
 
-    private void initComponent() {
-    setTitle("QUẢN LÝ CỬA HÀNG SÁCH");
-    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    setSize(1300, 850);
-    setLocationRelativeTo(null);
-    setLayout(new BorderLayout());
+    /**
+     * Chuyển từ Trang chủ vào các trang nghiệp vụ (không hiệu ứng)
+     */
+    public void switchView(String businessName) {
+        rootLayout.show(rootPanel, "MAIN_VIEW");
+        showCard(businessName);
+        sidebar.setMenuSelected(businessName);
+    }
 
-    // 1. Sidebar
-    sidebar = new Sidebar(this);
-    add(sidebar, BorderLayout.WEST);
+    /**
+     * Chuyển đổi giữa các trang con trong vùng Content
+     */
+    public void showCard(String name) {
+        contentLayout.show(contentArea, name);
+        header.setTitle(name.toUpperCase());
+    }
 
-    // 2. Panel chính chứa Header và ContentArea
-    JPanel pnlMain = new JPanel(new BorderLayout());
-    header = new Header();
-    pnlMain.add(header, BorderLayout.NORTH);
-
-    // CHỈ KHỞI TẠO 1 LẦN DUY NHẤT Ở ĐÂY
-    cardLayout = new CardLayout();
-    contentArea = new JPanel(cardLayout);
-    contentArea.setBackground(Theme.BACKGROUND);
-
-    // --- KHỞI TẠO CÁC MÀN HÌNH TƯƠNG ỨNG VỚI SIDEBAR ---
-    // (Tạm thời dùng JPanel rỗng để test nút, sau này bạn replace bằng GUI thật)
-    contentArea.add(new TrangChuPanel(), "Trang chủ");
-    contentArea.add(new BanHangPanel(), "Bán hàng");
-    contentArea.add(new SanPhamPanel(), "Sản phẩm");
-    contentArea.add(new NhapHangPanel(), "Nhập hàng");
-    contentArea.add(new KhachHangPanel(), "Khách hàng");
-    contentArea.add(new NhaCungCapPanel(), "Nhà cung cấp"); // Mới thêm
-    contentArea.add(new NhanVienPanel(), "Nhân viên");
-    contentArea.add(new ThongKePanel(), "Thống kê");
-    contentArea.add(new PhanQuyenPanel(), "Phân quyền");   // Mới thêm
-
-    // Tạo màn hình chào mừng
-    JPanel pnlWelcome = new JPanel(new GridBagLayout());
-    pnlWelcome.add(new JLabel("HỆ THỐNG QUẢN LÝ BÁN SÁCH TRỰC TUYẾN"));
-    contentArea.add(pnlWelcome, "WELCOME");
-
-    pnlMain.add(contentArea, BorderLayout.CENTER);
-    add(pnlMain, BorderLayout.CENTER); // Thêm pnlMain duy nhất vào Frame
+    /**
+     * Quay lại màn hình Trang chủ (Portal)
+     */
+    public void backToHome() {
+        rootLayout.show(rootPanel, "HOME_VIEW");
     }
 }

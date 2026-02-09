@@ -19,6 +19,22 @@ public class Theme {
     public static final Color WARNING_COLOR = new Color(243, 156, 18); // Vàng (Cảnh báo/Sửa)
     public static final Color PURPLE_COLOR = new Color(155, 89, 182); // Tím (Làm mới)
 
+    // Thêm các màu cho table
+    public static final Color TABLE_HEADER_BG = PRIMARY;
+    public static final Color TABLE_HEADER_FG = Color.WHITE;
+    public static final Color TABLE_SELECTION_BG = new Color(59, 130, 246, 50);
+    public static final Color TABLE_GRID_COLOR = new Color(229, 231, 235);
+    public static final Color TABLE_INACTIVE_BG = new Color(248, 249, 250);
+    public static final Color TABLE_INACTIVE_FG = new Color(108, 117, 125);
+    public static final Color TABLE_ACTIVE_COLOR = new Color(34, 197, 94);  // Xanh lá cho Active
+    public static final Color TABLE_INACTIVE_COLOR = new Color(239, 68, 68); // Đỏ cho Inactive
+    
+    // Thêm các màu cho button states
+    public static final Color BUTTON_HOVER_ADD = new Color(34, 197, 94).darker();
+    public static final Color BUTTON_HOVER_EDIT = new Color(245, 158, 11).darker();
+    public static final Color BUTTON_HOVER_DELETE = new Color(239, 68, 68).darker();
+    public static final Color BUTTON_HOVER_REFRESH = new Color(59, 130, 246).darker();
+
     public static final int ROUNDING_ARC = 15;
 
     public static void setup(boolean isDark) {
