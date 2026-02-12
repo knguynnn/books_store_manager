@@ -1,42 +1,43 @@
 package Frontend.GUI.NhapHangGUI;
 
+import Frontend.Compoent.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.table.*;
 import java.awt.*;
-import java.awt.event.*;
 
 public class NhapHangPanel extends JPanel {
-    private JTable tablePhieuNhap;
+    private Table tablePhieuNhap;
     private DefaultTableModel modelPhieuNhap;
 
-    private JTable tableChiTiet;
+    private Table tableChiTiet;
     private DefaultTableModel modelChiTiet;
 
-    private JTextField txtTimKiem;
-    private JButton btnTim;
+    private SearchTextField txtTimKiem;
 
-    private JTextField txtMaPhieuNhap, txtNgayNhap, txtTongTienNhap;
-    private JComboBox<String> cboMaNCC, cboMaNV;
-    private JButton btnChonNCC, btnChonNV;
-
-    private JComboBox<String> cboMaSP;
-    private JButton btnChonSP;
+    private InfoField txtMaPhieuNhap, txtNgayNhap, txtTongTienNhap, txtDonGia;
+    private JComboBox<String> cboMaNCC, cboMaNV, cboMaSP;
+    private JButton btnChonNCC, btnChonNV, btnChonSP;
     private JSpinner spinSoLuong;
-    private JTextField txtDonGia;
-    private JButton btnThemVaoPhieu;
 
-    private JButton btnLuu, btnSua, btnXoa, btnMoi, btnNhap, btnXuat;
+    private ButtonAdd btnLuu;
+    private ButtonFix btnSua;
+    private ButtonDele btnXoa;
+    private ButtonRefresh btnMoi;
+    private ButtonNhapExcel btnNhap;
+    private ButtonXuatExcel btnXuat;
+    private CustomButton btnThemVaoPhieu;
 
     public NhapHangPanel() {
         setLayout(new BorderLayout());
-        setBackground(new Color(240, 240, 240));
+        setBackground(Theme.BACKGROUND);
 
         JLabel lblTitle = new JLabel("PHIẾU NHẬP HÀNG");
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblTitle.setForeground(Theme.TEXT);
         lblTitle.setBorder(new EmptyBorder(10, 15, 10, 0));
         lblTitle.setOpaque(true);
-        lblTitle.setBackground(new Color(240, 240, 240));
+        lblTitle.setBackground(Theme.BACKGROUND);
         add(lblTitle, BorderLayout.NORTH);
 
         JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
@@ -55,10 +56,11 @@ public class NhapHangPanel extends JPanel {
     private JPanel createLeftFormPanel() {
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.setBackground(Color.WHITE);
-        wrapper.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, new Color(220, 220, 220)));
+        wrapper.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, Theme.BORDER));
 
         JLabel lblFormTitle = new JLabel("  THÔNG TIN PHIẾU NHẬP");
         lblFormTitle.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblFormTitle.setForeground(Theme.TEXT);
         lblFormTitle.setPreferredSize(new Dimension(0, 35));
         lblFormTitle.setOpaque(true);
         lblFormTitle.setBackground(Color.WHITE);
@@ -96,9 +98,8 @@ public class NhapHangPanel extends JPanel {
         formPanel.add(createFormLabel("Mã phiếu:"), lbl);
         row++;
         field.gridy = row;
-        txtMaPhieuNhap = createFormTextField();
+        txtMaPhieuNhap = new InfoField("");
         txtMaPhieuNhap.setEditable(false);
-        txtMaPhieuNhap.setBackground(new Color(235, 235, 235));
         formPanel.add(txtMaPhieuNhap, field);
 
         row++;
@@ -106,8 +107,7 @@ public class NhapHangPanel extends JPanel {
         formPanel.add(createFormLabel("Ngày nhập:"), lbl);
         row++;
         field.gridy = row;
-        txtNgayNhap = createFormTextField();
-        txtNgayNhap.setText(java.time.LocalDate.now().toString());
+        txtNgayNhap = new InfoField(java.time.LocalDate.now().toString());
         formPanel.add(txtNgayNhap, field);
 
         row++;
@@ -119,7 +119,7 @@ public class NhapHangPanel extends JPanel {
         fieldWithBtn.gridwidth = 1;
         cboMaNV = new JComboBox<>();
         cboMaNV.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        cboMaNV.setPreferredSize(new Dimension(0, 30));
+        cboMaNV.setPreferredSize(new Dimension(0, 35));
         formPanel.add(cboMaNV, fieldWithBtn);
         btnC.gridy = row;
         btnC.gridx = 1;
@@ -134,7 +134,7 @@ public class NhapHangPanel extends JPanel {
         fieldWithBtn.gridx = 0;
         cboMaNCC = new JComboBox<>();
         cboMaNCC.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        cboMaNCC.setPreferredSize(new Dimension(0, 30));
+        cboMaNCC.setPreferredSize(new Dimension(0, 35));
         formPanel.add(cboMaNCC, fieldWithBtn);
         btnC.gridy = row;
         btnC.gridx = 1;
@@ -146,26 +146,24 @@ public class NhapHangPanel extends JPanel {
         formPanel.add(createFormLabel("Tổng tiền nhập:"), lbl);
         row++;
         field.gridy = row;
-        txtTongTienNhap = createFormTextField();
+        txtTongTienNhap = new InfoField("0");
         txtTongTienNhap.setEditable(false);
-        txtTongTienNhap.setBackground(new Color(235, 235, 235));
-        txtTongTienNhap.setText("0");
         formPanel.add(txtTongTienNhap, field);
 
         row++;
-        JPanel sep1 = new JPanel();
-        sep1.setBackground(new Color(200, 200, 200));
-        sep1.setPreferredSize(new Dimension(0, 1));
+        JSeparator sep = new JSeparator();
+        sep.setForeground(Theme.BORDER);
         GridBagConstraints sepC = new GridBagConstraints();
         sepC.gridx = 0; sepC.gridy = row; sepC.gridwidth = 2;
         sepC.fill = GridBagConstraints.HORIZONTAL;
         sepC.insets = new Insets(8, 0, 8, 0);
-        formPanel.add(sep1, sepC);
+        formPanel.add(sep, sepC);
 
         row++;
         lbl.gridy = row;
         JLabel lblCTTitle = createFormLabel("THÊM SẢN PHẨM VÀO PHIẾU");
         lblCTTitle.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblCTTitle.setForeground(Theme.TEXT);
         formPanel.add(lblCTTitle, lbl);
 
         row++;
@@ -176,7 +174,7 @@ public class NhapHangPanel extends JPanel {
         fieldWithBtn.gridx = 0;
         cboMaSP = new JComboBox<>();
         cboMaSP.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        cboMaSP.setPreferredSize(new Dimension(0, 30));
+        cboMaSP.setPreferredSize(new Dimension(0, 35));
         formPanel.add(cboMaSP, fieldWithBtn);
         btnC.gridy = row;
         btnC.gridx = 1;
@@ -198,14 +196,14 @@ public class NhapHangPanel extends JPanel {
         formPanel.add(createFormLabel("Đơn giá:"), lbl);
         row++;
         field.gridy = row;
-        txtDonGia = createFormTextField();
+        txtDonGia = new InfoField("");
         formPanel.add(txtDonGia, field);
 
         row++;
         field.gridy = row;
         field.insets = new Insets(8, 0, 6, 0);
-        btnThemVaoPhieu = createColorButton("Thêm vào phiếu", new Color(70, 130, 180));
-        btnThemVaoPhieu.setPreferredSize(new Dimension(0, 32));
+        btnThemVaoPhieu = new CustomButton("Thêm vào phiếu", Theme.ACCENT_COLOR);
+        btnThemVaoPhieu.setPreferredSize(new Dimension(0, 35));
         formPanel.add(btnThemVaoPhieu, field);
         field.insets = new Insets(2, 0, 6, 0);
 
@@ -230,12 +228,12 @@ public class NhapHangPanel extends JPanel {
         panel.setBackground(Color.WHITE);
         panel.setBorder(new EmptyBorder(10, 15, 15, 15));
 
-        btnLuu = createColorButton("⊕ Lưu", new Color(40, 167, 69));
-        btnSua = createColorButton("⊙ Sửa", new Color(255, 165, 0));
-        btnXoa = createColorButton("⊗ Xóa", new Color(220, 53, 69));
-        btnMoi = createColorButton("↻ Mới", new Color(70, 130, 180));
-        btnNhap = createColorButton("📁 Nhập", new Color(23, 162, 184));
-        btnXuat = createColorButton("📊 Xuất", new Color(108, 117, 125));
+        btnLuu = new ButtonAdd("Lưu");
+        btnSua = new ButtonFix("Sửa");
+        btnXoa = new ButtonDele("Xóa");
+        btnMoi = new ButtonRefresh("Mới");
+        btnNhap = new ButtonNhapExcel("Nhập");
+        btnXuat = new ButtonXuatExcel("Xuất");
 
         panel.add(btnLuu);
         panel.add(btnSua);
@@ -256,19 +254,8 @@ public class NhapHangPanel extends JPanel {
         searchPanel.setBackground(Color.WHITE);
         searchPanel.setBorder(new EmptyBorder(8, 10, 8, 10));
 
-        JLabel lblTK = new JLabel("Tìm kiếm:");
-        lblTK.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        searchPanel.add(lblTK, BorderLayout.WEST);
-
-        txtTimKiem = new JTextField();
-        txtTimKiem.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        txtTimKiem.setPreferredSize(new Dimension(0, 30));
-        txtTimKiem.setToolTipText("Nhập mã phiếu, mã NCC, mã NV...");
+        txtTimKiem = new SearchTextField("Tìm mã phiếu, mã NCC, mã NV...");
         searchPanel.add(txtTimKiem, BorderLayout.CENTER);
-
-        btnTim = createColorButton("Tìm", new Color(52, 73, 94));
-        btnTim.setPreferredSize(new Dimension(70, 30));
-        searchPanel.add(btnTim, BorderLayout.EAST);
 
         panel.add(searchPanel, BorderLayout.NORTH);
 
@@ -293,11 +280,11 @@ public class NhapHangPanel extends JPanel {
             @Override
             public boolean isCellEditable(int r, int c) { return false; }
         };
-        tablePhieuNhap = new JTable(modelPhieuNhap);
-        setupTable(tablePhieuNhap);
+        tablePhieuNhap = new Table();
+        tablePhieuNhap.setModel(modelPhieuNhap);
 
         JScrollPane sp = new JScrollPane(tablePhieuNhap);
-        sp.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
+        sp.setBorder(BorderFactory.createLineBorder(Theme.BORDER));
         panel.add(sp, BorderLayout.CENTER);
 
         return panel;
@@ -310,7 +297,7 @@ public class NhapHangPanel extends JPanel {
 
         JLabel lblCT = new JLabel("  Chi tiết phiếu nhập");
         lblCT.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        lblCT.setForeground(new Color(70, 130, 180));
+        lblCT.setForeground(Theme.PRIMARY);
         lblCT.setPreferredSize(new Dimension(0, 25));
         panel.add(lblCT, BorderLayout.NORTH);
 
@@ -319,11 +306,11 @@ public class NhapHangPanel extends JPanel {
             @Override
             public boolean isCellEditable(int r, int c) { return false; }
         };
-        tableChiTiet = new JTable(modelChiTiet);
-        setupTable(tableChiTiet);
+        tableChiTiet = new Table();
+        tableChiTiet.setModel(modelChiTiet);
 
         JScrollPane sp = new JScrollPane(tableChiTiet);
-        sp.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
+        sp.setBorder(BorderFactory.createLineBorder(Theme.BORDER));
         panel.add(sp, BorderLayout.CENTER);
 
         return panel;
@@ -360,38 +347,6 @@ public class NhapHangPanel extends JPanel {
     }
 
     protected void loadChiTietPhieuNhap(String maPhieuNhap) {
-    }
-
-    private void setupTable(JTable table) {
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        table.setRowHeight(30);
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setGridColor(new Color(230, 230, 230));
-        table.setShowGrid(true);
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-        table.setIntercellSpacing(new Dimension(0, 0));
-        table.setSelectionBackground(new Color(209, 232, 255));
-        table.setSelectionForeground(Color.BLACK);
-
-        JTableHeader header = table.getTableHeader();
-        header.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        header.setBackground(new Color(52, 73, 94));
-        header.setForeground(Color.WHITE);
-        header.setPreferredSize(new Dimension(0, 32));
-        header.setReorderingAllowed(false);
-
-        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable t, Object value,
-                    boolean isSelected, boolean hasFocus, int row, int column) {
-                Component c = super.getTableCellRendererComponent(t, value, isSelected, hasFocus, row, column);
-                if (!isSelected) {
-                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(245, 248, 250));
-                }
-                setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
-                return c;
-            }
-        });
     }
 
     public boolean validatePhieuNhap() {
@@ -473,64 +428,34 @@ public class NhapHangPanel extends JPanel {
     private JLabel createFormLabel(String text) {
         JLabel label = new JLabel(text);
         label.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        label.setForeground(new Color(80, 80, 80));
+        label.setForeground(Theme.TEXT);
         return label;
-    }
-
-    private JTextField createFormTextField() {
-        JTextField tf = new JTextField();
-        tf.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        tf.setPreferredSize(new Dimension(0, 30));
-        tf.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200)),
-            BorderFactory.createEmptyBorder(2, 8, 2, 8)
-        ));
-        return tf;
     }
 
     private JButton createDotButton() {
         JButton btn = new JButton("...");
-        btn.setPreferredSize(new Dimension(35, 30));
+        btn.setPreferredSize(new Dimension(35, 35));
         btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setBackground(new Color(230, 230, 230));
-        btn.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
+        btn.setBackground(Theme.BACKGROUND);
+        btn.setBorder(BorderFactory.createLineBorder(Theme.BORDER));
         return btn;
     }
 
-    private JButton createColorButton(String text, Color bgColor) {
-        JButton button = new JButton(text);
-        button.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        button.setBackground(bgColor);
-        button.setForeground(Color.WHITE);
-        button.setFocusPainted(false);
-        button.setBorderPainted(false);
-        button.setPreferredSize(new Dimension(0, 33));
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        button.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { button.setBackground(bgColor.darker()); }
-            public void mouseExited(MouseEvent e) { button.setBackground(bgColor); }
-        });
-
-        return button;
-    }
-
-    public JTable getTablePhieuNhap() { return tablePhieuNhap; }
-    public JTable getTableChiTiet() { return tableChiTiet; }
+    public Table getTablePhieuNhap() { return tablePhieuNhap; }
+    public Table getTableChiTiet() { return tableChiTiet; }
     public DefaultTableModel getModelPhieuNhap() { return modelPhieuNhap; }
     public DefaultTableModel getModelChiTiet() { return modelChiTiet; }
-    public JTextField getTxtTimKiem() { return txtTimKiem; }
-    public JButton getBtnTim() { return btnTim; }
-    public JButton getBtnLuu() { return btnLuu; }
-    public JButton getBtnSua() { return btnSua; }
-    public JButton getBtnXoa() { return btnXoa; }
-    public JButton getBtnMoi() { return btnMoi; }
-    public JButton getBtnNhap() { return btnNhap; }
-    public JButton getBtnXuat() { return btnXuat; }
-    public JTextField getTxtMaPhieuNhap() { return txtMaPhieuNhap; }
-    public JTextField getTxtNgayNhap() { return txtNgayNhap; }
-    public JTextField getTxtTongTienNhap() { return txtTongTienNhap; }
+    public SearchTextField getTxtTimKiem() { return txtTimKiem; }
+    public ButtonAdd getBtnLuu() { return btnLuu; }
+    public ButtonFix getBtnSua() { return btnSua; }
+    public ButtonDele getBtnXoa() { return btnXoa; }
+    public ButtonRefresh getBtnMoi() { return btnMoi; }
+    public ButtonNhapExcel getBtnNhap() { return btnNhap; }
+    public ButtonXuatExcel getBtnXuat() { return btnXuat; }
+    public InfoField getTxtMaPhieuNhap() { return txtMaPhieuNhap; }
+    public InfoField getTxtNgayNhap() { return txtNgayNhap; }
+    public InfoField getTxtTongTienNhap() { return txtTongTienNhap; }
     public JComboBox<String> getCboMaNCC() { return cboMaNCC; }
     public JComboBox<String> getCboMaNV() { return cboMaNV; }
     public JButton getBtnChonNCC() { return btnChonNCC; }
@@ -538,6 +463,6 @@ public class NhapHangPanel extends JPanel {
     public JButton getBtnChonSP() { return btnChonSP; }
     public JComboBox<String> getCboMaSP() { return cboMaSP; }
     public JSpinner getSpinSoLuong() { return spinSoLuong; }
-    public JTextField getTxtDonGia() { return txtDonGia; }
-    public JButton getBtnThemVaoPhieu() { return btnThemVaoPhieu; }
+    public InfoField getTxtDonGia() { return txtDonGia; }
+    public CustomButton getBtnThemVaoPhieu() { return btnThemVaoPhieu; }
 }
