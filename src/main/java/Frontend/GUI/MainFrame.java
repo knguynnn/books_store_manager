@@ -5,6 +5,7 @@ import javax.swing.*;
 import java.awt.*;
 
 import Frontend.GUI.KhachHangGUI.KhachHangPanel;
+import Frontend.GUI.NhanVienGUI.NhanVienPanel;
 import Frontend.GUI.TrangChuGUI.TrangChuPanel;
 
 public class MainFrame extends JFrame {
@@ -54,8 +55,11 @@ public class MainFrame extends JFrame {
         // 1. Trang Khách hàng (Sử dụng Panel thực tế bạn đang làm)
         contentArea.add(new KhachHangPanel(), "Khách hàng");
         
+        // 1.2 Trang Nhân viên
+        contentArea.add(new NhanVienPanel(), "Nhân viên");
+        
         // 2. Đăng ký các trang khác dưới dạng Placeholder
-        String[] pages = {"Bán hàng", "Sản phẩm", "Nhập hàng", "Nhà cung cấp", "Nhân viên", "Thống kê", "Phân quyền"};
+        String[] pages = {"Bán hàng", "Sản phẩm", "Nhập hàng", "Nhà cung cấp", "Thống kê", "Phân quyền"};
         for (String page : pages) {
             JPanel pnlPlaceholder = new JPanel(new GridBagLayout());
             pnlPlaceholder.setBackground(Theme.BACKGROUND);
