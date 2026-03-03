@@ -239,12 +239,14 @@ CREATE TABLE `phieunhaphang` (
 CREATE TABLE `sanpham` (
   `MaSP` varchar(50) NOT NULL,
   `Ten` varchar(255) DEFAULT NULL,
+  `MaTG` varchar(50) DEFAULT NULL,   -- Thêm trực tiếp Mã Tác Giả
+  `MaTL` varchar(50) DEFAULT NULL,   -- Thêm trực tiếp Mã Thể Loại
+  `MaNXB` varchar(50) DEFAULT NULL,
+  `MaNCC` varchar(50) DEFAULT NULL,
   `SLTonKho` int(11) DEFAULT 0,
   `DonViTinh` varchar(50) DEFAULT NULL,
   `DonGia` decimal(18,2) DEFAULT NULL,
   `NamXB` int(11) DEFAULT NULL,
-  `MaNXB` varchar(50) DEFAULT NULL,
-  `MaNCC` varchar(50) DEFAULT NULL,
   `MoTa` text DEFAULT NULL,
   `TrangThai` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -253,10 +255,10 @@ CREATE TABLE `sanpham` (
 -- Đang đổ dữ liệu cho bảng `sanpham`
 --
 
-INSERT INTO `sanpham` (`MaSP`, `Ten`, `SLTonKho`, `DonViTinh`, `DonGia`, `NamXB`, `MaNXB`, `MaNCC`, `MoTa`, `TrangThai`) VALUES
-('SP001', 'Mắt Biếc', 50, 'Cuốn', 110000.00, 2019, 'NXB001', 'NCC001', 'Tác phẩm nổi tiếng của Nguyễn Nhật Ánh', 1),
-('SP002', 'Dế Mèn Phiêu Lưu Ký', 100, 'Cuốn', 55000.00, 2020, 'NXB002', 'NCC001', 'Truyện thiếu nhi kinh điển', 1),
-('SP003', 'Đắc Nhân Tâm', 30, 'Cuốn', 86000.00, 2021, 'NXB001', 'NCC002', 'Sách kỹ năng hay nhất mọi thời đại', 1);
+INSERT INTO `sanpham` (`MaSP`, `Ten`, `MaTG`, `MaTL`, `MaNXB`, `MaNCC`, `SLTonKho`, `DonViTinh`, `DonGia`, `NamXB`, `MoTa`, `TrangThai`) VALUES
+('SP001', 'Mắt Biếc', 'TG001', 'TL001', 'NXB001', 'NCC001', 50, 'Cuốn', 110000.00, 2019, 'Tác phẩm nổi tiếng của Nguyễn Nhật Ánh', 1),
+('SP002', 'Dế Mèn Phiêu Lưu Ký', 'TG002', 'TL002', 'NXB002', 'NCC001', 100, 'Cuốn', 55000.00, 2020, 'Truyện thiếu nhi kinh điển', 1),
+('SP003', 'Đắc Nhân Tâm', 'TG003', 'TL003', 'NXB001', 'NCC002', 30, 'Cuốn', 86000.00, 2021, 'Sách kỹ năng hay nhất mọi thời đại', 1);
 
 -- --------------------------------------------------------
 
