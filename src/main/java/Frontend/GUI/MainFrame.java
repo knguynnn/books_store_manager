@@ -8,6 +8,8 @@ import Frontend.GUI.KhachHangGUI.KhachHangPanel;
 import Frontend.GUI.NhanVienGUI.NhanVienPanel;
 import Frontend.GUI.SanPhamGUI.SanPhamPanel;
 import Frontend.GUI.TrangChuGUI.TrangChuPanel;
+import Frontend.GUI.ThongKeGUI.ThongKePanel;
+import Frontend.GUI.PhanQuyenGUI.PhanQuyenPanel;
 
 public class MainFrame extends JFrame {
     private CardLayout rootLayout;
@@ -60,9 +62,14 @@ public class MainFrame extends JFrame {
         contentArea.add(new NhanVienPanel(), "Nhân viên");
         
         contentArea.add(new SanPhamPanel(), "Sản phẩm");
+        //1.5 thống kê 
+        contentArea.add(new ThongKePanel(), "Thống kê");
+
+        //1.6 Trang Phân Quyền 
+        contentArea.add(new PhanQuyenPanel(), "Phân quyền");
         
         // 2. Đăng ký các trang khác dưới dạng Placeholder
-        String[] pages = {"Bán hàng", "Nhập hàng", "Nhà cung cấp", "Thống kê", "Phân quyền"};
+        String[] pages = {"Bán hàng", "Sản phẩm", "Nhập hàng", "Nhà cung cấp", "Thống kê", "Phân quyền"};
         for (String page : pages) {
             JPanel pnlPlaceholder = new JPanel(new GridBagLayout());
             pnlPlaceholder.setBackground(Theme.BACKGROUND);
