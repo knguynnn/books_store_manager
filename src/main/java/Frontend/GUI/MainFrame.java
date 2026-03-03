@@ -69,7 +69,7 @@ public class MainFrame extends JFrame {
         contentArea.add(new PhanQuyenPanel(), "Phân quyền");
         
         // 2. Đăng ký các trang khác dưới dạng Placeholder
-        String[] pages = {"Bán hàng", "Sản phẩm", "Nhập hàng", "Nhà cung cấp", "Thống kê", "Phân quyền"};
+        String[] pages = {"Bán hàng", "Nhập hàng", "Nhà cung cấp"};
         for (String page : pages) {
             JPanel pnlPlaceholder = new JPanel(new GridBagLayout());
             pnlPlaceholder.setBackground(Theme.BACKGROUND);
