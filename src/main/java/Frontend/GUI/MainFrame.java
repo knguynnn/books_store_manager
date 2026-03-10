@@ -114,4 +114,11 @@ public class MainFrame extends JFrame {
     public void backToHome() {
         rootLayout.show(rootPanel, "HOME_VIEW");
     }
+
+    public void applyPermissions() {
+    // Gọi hàm lọc của Sidebar bằng dữ liệu từ bộ nhớ tạm SharedData
+    if (Backend.BUS.SharedData.quyenHienTai != null) {
+        sidebar.applyPermissions(Backend.BUS.SharedData.quyenHienTai);
+    }
+}
 }
