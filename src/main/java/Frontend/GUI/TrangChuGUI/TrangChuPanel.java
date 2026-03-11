@@ -11,10 +11,24 @@ import java.io.File;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import Backend.BUS.SharedData;
+import Backend.DTO.NhanVien_TaiKhoan.PhanQuyenDTO;
 
 public class TrangChuPanel extends JPanel {
     private MainFrame mainFrame;
     private Image backgroundImage;
+
+    private static class MenuModel {
+        String title, icon, permissionKey;
+        Color color;
+
+        MenuModel(String title, String icon, Color color, String permissionKey) {
+            this.title = title;
+            this.icon = icon;
+            this.color = color;
+            this.permissionKey = permissionKey;
+        }
+    }
 
     public TrangChuPanel(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
@@ -98,14 +112,24 @@ public class TrangChuPanel extends JPanel {
         JPanel pnlGrid = new JPanel(new MigLayout("wrap 4, gap 25", "[220!][220!][220!][220!]", "[200!][200!]"));
         pnlGrid.setOpaque(false);
 
-        pnlGrid.add(createModernCard("Bán hàng", "shopping-basket.svg", new Color(45, 212, 191)));
-        pnlGrid.add(createModernCard("Sản phẩm", "dock.svg", new Color(129, 140, 248)));
-        pnlGrid.add(createModernCard("Nhập hàng", "circle-plus.svg", new Color(251, 146, 60)));
-        pnlGrid.add(createModernCard("Khách hàng", "file-user.svg", new Color(56, 189, 248)));
-        pnlGrid.add(createModernCard("Nhà cung cấp", "ncc.svg", new Color(167, 139, 250)));
-        pnlGrid.add(createModernCard("Nhân viên", "square-user.svg", new Color(248, 113, 113)));
-        pnlGrid.add(createModernCard("Thống kê", "thongke.svg", new Color(232, 121, 249)));
-        pnlGrid.add(createModernCard("Phân quyền", "shield-check.svg", new Color(148, 163, 184)));
+        PhanQuyenDTO quyen = SharedData.quyenHienTai; // Lấy quyền từ SharedData
+
+        java.util.List<MenuModel> listMenu = new java.util.ArrayList<>();
+        listMenu.add(new MenuModel("Bán hàng", "shopping-basket.svg", new Color(45, 212, 191), "qlBanHang"));
+        listMenu.add(new MenuModel("Sản phẩm", "dock.svg", new Color(129, 140, 248), "qlSanPham"));
+        listMenu.add(new MenuModel("Nhập hàng", "circle-plus.svg", new Color(251, 146, 60), "qlNhapHang"));
+        listMenu.add(new MenuModel("Khách hàng", "file-user.svg", new Color(56, 189, 248), "qlKhachHang"));
+        listMenu.add(new MenuModel("Nhà cung cấp", "ncc.svg", new Color(167, 139, 250), "qlNhaCungCap"));
+        listMenu.add(new MenuModel("Nhân viên", "square-user.svg", new Color(248, 113, 113), "qlNhanVien"));
+        listMenu.add(new MenuModel("Thống kê", "thongke.svg", new Color(232, 121, 249), "qlThongKe"));
+        listMenu.add(new MenuModel("Phân quyền", "shield-check.svg", new Color(148, 163, 184), "qlPhanQuyen"));
+
+        for (MenuModel item : listMenu) {
+            // Chỉ thêm nút nếu có quyền (so sánh == 1 để tránh lỗi int/boolean)
+            if (hasPermission(quyen, item.permissionKey)) {
+                pnlGrid.add(createModernCard(item.title, item.icon, item.color));
+            }
+        }
 
         this.add(pnlHeader, "wrap");
         this.add(pnlGrid, "wrap");
@@ -157,4 +181,19 @@ public class TrangChuPanel extends JPanel {
         btn.addActionListener(e -> mainFrame.switchView(text));
         return btn;
     }
+
+    private boolean hasPermission(PhanQuyenDTO quyen, String key) {
+        if (quyen == null) return false;
+        switch (key) {
+            case "qlBanHang": return quyen.getQlBanHang() == 1;
+            case "qlNhapHang": return quyen.getQlNhapHang() == 1;
+            case "qlSanPham": return quyen.getQlSanPham() == 1;
+            case "qlKhachHang": return quyen.getQlKhachHang() == 1;
+            case "qlNhanVien": return quyen.getQlNhanVien() == 1;
+            case "qlNhaCungCap": return quyen.getQlNhaCungCap() == 1;
+            case "qlThongKe": return quyen.getQlThongKe() == 1;
+            case "qlPhanQuyen": return quyen.getQlPhanQuyen() == 1;
+            default: return false;
+        }
+    } 
 }
