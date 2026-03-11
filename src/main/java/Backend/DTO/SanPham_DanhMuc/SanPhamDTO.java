@@ -3,6 +3,8 @@ package Backend.DTO.SanPham_DanhMuc;
 public class SanPhamDTO {
     private String maSP;
     private String tenSP;
+    private String maTG; 
+    private String maTL; 
     private int soLuongTon;
     private String donViTinh;
     private long donGia;
@@ -14,10 +16,13 @@ public class SanPhamDTO {
 
     public SanPhamDTO() {}
 
-    public SanPhamDTO(String maSP, String tenSP, int soLuongTon, String donViTinh, long donGia, 
-                      int namXuatBan, String maNXB, String maNCC, String moTa, boolean trangThai) {
+    public SanPhamDTO(String maSP, String tenSP, String maTG, String maTL, int soLuongTon, 
+                      String donViTinh, long donGia, int namXuatBan, String maNXB, 
+                      String maNCC, String moTa, boolean trangThai) {
         this.maSP = maSP;
         this.tenSP = tenSP;
+        this.maTG = maTG;
+        this.maTL = maTL;
         this.soLuongTon = soLuongTon;
         this.donViTinh = donViTinh;
         this.donGia = donGia;
@@ -34,6 +39,12 @@ public class SanPhamDTO {
 
     public String getTenSP() { return tenSP; }
     public void setTenSP(String tenSP) { this.tenSP = tenSP; }
+
+    public String getMaTG() { return maTG; }
+    public void setMaTG(String maTG) { this.maTG = maTG; }
+
+    public String getMaTL() { return maTL; }
+    public void setMaTL(String maTL) { this.maTL = maTL; }
 
     public int getSoLuongTon() { return soLuongTon; }
     public void setSoLuongTon(int soLuongTon) { this.soLuongTon = soLuongTon; }
