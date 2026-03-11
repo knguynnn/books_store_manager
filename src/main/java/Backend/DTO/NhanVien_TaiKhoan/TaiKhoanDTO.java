@@ -4,16 +4,16 @@ public class TaiKhoanDTO {
     private String tenDangNhap;
     private String matKhau;
     private String maNV;
-    private String quyen;
+    private String maQuyen;
     private boolean trangThai;
 
     public TaiKhoanDTO() {}
 
-    public TaiKhoanDTO(String tenDangNhap, String matKhau, String maNV, String quyen, boolean trangThai) {
+    public TaiKhoanDTO(String tenDangNhap, String matKhau, String maNV, String maQuyen, boolean trangThai) {
         this.tenDangNhap = tenDangNhap;
         this.matKhau = matKhau;
         this.maNV = maNV;
-        this.quyen = quyen;
+        this.maQuyen = maQuyen;
         this.trangThai = trangThai;
     }
 
@@ -26,8 +26,8 @@ public class TaiKhoanDTO {
     public String getMaNV() { return maNV; }
     public void setMaNV(String maNV) { this.maNV = maNV; }
 
-    public String getQuyen() { return quyen; }
-    public void setQuyen(String quyen) { this.quyen = quyen; }
+    public String getmaQuyen() { return maQuyen; }
+    public void setmaQuyen(String maQuyen) { this.maQuyen = maQuyen; }
 
     public boolean isTrangThai() { return trangThai; }
     public void setTrangThai(boolean trangThai) { this.trangThai = trangThai; }
