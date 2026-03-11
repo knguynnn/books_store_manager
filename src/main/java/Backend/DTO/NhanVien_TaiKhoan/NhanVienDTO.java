@@ -2,18 +2,15 @@ package Backend.DTO.NhanVien_TaiKhoan;
 
 import java.sql.Date;
 
-// Mối quan hệ 1-1: NhanVien + ChiTietNhanVien dùng chung MaNV.
-// DTO này gộp cả 2 bảng để tiện sử dụng trong DAO/BUS/GUI.
-
 public class NhanVienDTO {
-    // === Bảng NhanVien ===
+    // --- BẢNG NHANVIEN ---
     private String maNV;
     private String hoNV;
     private String tenNV;
     private String chucVu;
     private boolean trangThai;
 
-    // === Bảng ChiTietNhanVien ===
+    // --- BẢNG CHITIETNHANVIEN ---
     private Date ngSinh;
     private String gioiTinh;
     private String soDienThoai;
@@ -23,17 +20,30 @@ public class NhanVienDTO {
     private Date ngayVaoLam;
     private long luongCoBan;
 
-    public NhanVienDTO() {}
+    // Constructor không tham số
+    public NhanVienDTO() {
+    }
 
-    public NhanVienDTO(String maNV, String hoNV, String tenNV, String chucVu, boolean trangThai) {
+    // Constructor đầy đủ tham số
+    public NhanVienDTO(String maNV, String hoNV, String tenNV, String chucVu, boolean trangThai, 
+                       Date ngSinh, String gioiTinh, String soDienThoai, String email, 
+                       String diaChi, String cccd, Date ngayVaoLam, long luongCoBan) {
         this.maNV = maNV;
         this.hoNV = hoNV;
         this.tenNV = tenNV;
         this.chucVu = chucVu;
         this.trangThai = trangThai;
+        this.ngSinh = ngSinh;
+        this.gioiTinh = gioiTinh;
+        this.soDienThoai = soDienThoai;
+        this.email = email;
+        this.diaChi = diaChi;
+        this.cccd = cccd;
+        this.ngayVaoLam = ngayVaoLam;
+        this.luongCoBan = luongCoBan;
     }
 
-    // --- Bảng NhanVien ---
+    // --- GETTER & SETTER ---
     public String getMaNV() { return maNV; }
     public void setMaNV(String maNV) { this.maNV = maNV; }
 
@@ -49,7 +59,6 @@ public class NhanVienDTO {
     public boolean isTrangThai() { return trangThai; }
     public void setTrangThai(boolean trangThai) { this.trangThai = trangThai; }
 
-    // --- Bảng ChiTietNhanVien ---
     public Date getNgSinh() { return ngSinh; }
     public void setNgSinh(Date ngSinh) { this.ngSinh = ngSinh; }
 

@@ -1,4 +1,3 @@
-
 package Backend.BUS.KhachHang_BanHang;
 
 import Backend.DatabaseHelper;

@@ -4,13 +4,13 @@ import javax.swing.SwingUtilities;
 
 public class App {
     public static void main(String[] args) {
-        // Cài đặt giao diện FlatLaf (Sáng hoặc Tối)
+        // 1. Cài đặt giao diện FlatLaf (Giữ nguyên cấu hình Theme của bạn)
         Theme.setup(false); // false = Giao diện sáng (Light Mode)
 
-        // Chạy giao diện trên luồng Event Dispatch Thread (luồng an toàn của Swing)
+        // 2. Chạy giao diện trên luồng Event Dispatch Thread
         SwingUtilities.invokeLater(() -> {
-            MainFrame main = new MainFrame();
-            main.setVisible(true);
+            // Thay vì mở thẳng MainFrame, ta mở LoginGUI để thực hiện đăng nhập
+            new Frontend.GUI.LoginGUI().setVisible(true);
         });
     }
 }
