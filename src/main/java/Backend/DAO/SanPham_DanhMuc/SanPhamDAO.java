@@ -1,9 +1,13 @@
 package Backend.DAO.SanPham_DanhMuc;
 
-import Backend.DatabaseHelper;
-import Backend.DTO.SanPham_DanhMuc.SanPhamDTO;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
+
+import Backend.DTO.SanPham_DanhMuc.SanPhamDTO;
+import Backend.DatabaseHelper;
 
 public class SanPhamDAO {
     public ArrayList<SanPhamDTO> getAll() {
@@ -179,5 +183,36 @@ public class SanPhamDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    /**
+     * Trừ số lượng tồn kho khi bán hàng (dùng trong transaction)
+     */
+    public boolean updateSoLuongTon(String maSP, int soLuongBan, Connection conn) {
+        String sql = "UPDATE sanpham SET SLTonKho = SLTonKho - ? WHERE MaSP = ? AND SLTonKho >= ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, soLuongBan);
+            ps.setString(2, maSP);
+            ps.setInt(3, soLuongBan);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("❌ Lỗi trừ tồn kho: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Hoàn lại số lượng tồn kho khi xóa/sửa hóa đơn (dùng trong transaction)
+     */
+    public boolean hoanSoLuongTon(String maSP, int soLuong, Connection conn) {
+        String sql = "UPDATE sanpham SET SLTonKho = SLTonKho + ? WHERE MaSP = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, soLuong);
+            ps.setString(2, maSP);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("❌ Lỗi hoàn tồn kho: " + e.getMessage());
+            return false;
+        }
     }
 }
