@@ -157,7 +157,7 @@ public class HoaDonBUS {
             }
 
             // Xóa HĐ (cascade xóa cthoadon)
-            hoaDonDAO.delete(maHD);
+            hoaDonDAO.delete(maHD, conn);
 
             conn.commit();
             return true;
