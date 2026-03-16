@@ -1,6 +1,7 @@
 package Backend.BUS.KhachHang_BanHang;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 
@@ -42,23 +43,39 @@ public class HoaDonBUS {
             conn.setAutoCommit(false);
 
             // 1. Sinh mã + set thời gian
-            hd.setMaHD(hoaDonDAO.generateId());
             hd.setThoiGian(new Timestamp(System.currentTimeMillis()));
 
             // 2. Tính tổng tiền từ chi tiết
             long tongTienTruocKM = 0;
             for (CTHoaDonDTO ct : dsCTHD) {
-                ct.setMaHD(hd.getMaHD());
                 ct.setThanhTien(ct.getDonGiaBan() * ct.getSoLuong());
                 tongTienTruocKM += ct.getThanhTien();
             }
             hd.setTongTienTruocKM(tongTienTruocKM);
             hd.setTongTienThanhToan(tongTienTruocKM - hd.getGiamGiaHD());
 
-            // 3. Insert hóa đơn
-            hoaDonDAO.insert(hd, conn);
+            boolean inserted = false;
+            for (int attempt = 0; attempt < 5; attempt++) {
+                hd.setMaHD(hoaDonDAO.generateId());
+                try {
+                    inserted = hoaDonDAO.insert(hd, conn);
+                    break;
+                } catch (SQLException ex) {
+                    if (!isDuplicateKey(ex)) {
+                        throw ex;
+                    }
+                }
+            }
+            if (!inserted) {
+                conn.rollback();
+                return false;
+            }
 
-            // 4. Insert chi tiết + trừ tồn kho
+            for (CTHoaDonDTO ct : dsCTHD) {
+                ct.setMaHD(hd.getMaHD());
+            }
+
+            // 3. Insert chi tiết + trừ tồn kho
             for (CTHoaDonDTO ct : dsCTHD) {
                 ctHoaDonDAO.insert(ct, conn);
                 boolean stockOk = sanPhamDAO.updateSoLuongTon(ct.getMaSP(), ct.getSoLuong(), conn);
@@ -96,7 +113,11 @@ public class HoaDonBUS {
             // 1. Lấy chi tiết cũ → hoàn kho
             ArrayList<CTHoaDonDTO> dsCu = ctHoaDonDAO.getByMaHD(hd.getMaHD());
             for (CTHoaDonDTO ctCu : dsCu) {
-                sanPhamDAO.hoanSoLuongTon(ctCu.getMaSP(), ctCu.getSoLuong(), conn);
+                boolean stockOk = sanPhamDAO.hoanSoLuongTon(ctCu.getMaSP(), ctCu.getSoLuong(), conn);
+                if (!stockOk) {
+                    conn.rollback();
+                    return false;
+                }
             }
 
             // 2. Xóa chi tiết cũ
@@ -153,7 +174,11 @@ public class HoaDonBUS {
             // Hoàn kho
             ArrayList<CTHoaDonDTO> dsCT = ctHoaDonDAO.getByMaHD(maHD);
             for (CTHoaDonDTO ct : dsCT) {
-                sanPhamDAO.hoanSoLuongTon(ct.getMaSP(), ct.getSoLuong(), conn);
+                boolean stockOk = sanPhamDAO.hoanSoLuongTon(ct.getMaSP(), ct.getSoLuong(), conn);
+                if (!stockOk) {
+                    conn.rollback();
+                    return false;
+                }
             }
 
             // Xóa HĐ (cascade xóa cthoadon)
@@ -173,5 +198,12 @@ public class HoaDonBUS {
                 try { conn.setAutoCommit(true); conn.close(); } catch (Exception ex) { ex.printStackTrace(); }
             }
         }
+    }
+
+    private boolean isDuplicateKey(SQLException ex) {
+        String state = ex.getSQLState();
+        String message = ex.getMessage();
+        return (state != null && state.startsWith("23"))
+                || (message != null && message.toLowerCase().contains("duplicate"));
     }
 }

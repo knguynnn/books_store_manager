@@ -1,6 +1,7 @@
 package Backend.BUS.NCC_NhapHang;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 
@@ -42,20 +43,36 @@ public class PhieuNhapHangBUS {
             conn.setAutoCommit(false);
 
             // 1. Sinh mã + set thời gian
-            pn.setMaPhieuNhap(phieuNhapDAO.generateId());
             pn.setNgayNhap(new Timestamp(System.currentTimeMillis()));
 
             // 2. Tính tổng tiền từ chi tiết
             long tongTienNhap = 0;
             for (CTPhieuNhapHangDTO ct : dsCT) {
-                ct.setMaPhieuNhap(pn.getMaPhieuNhap());
                 ct.setThanhTien(ct.getDonGiaNhap() * ct.getSoLuong());
                 tongTienNhap += ct.getThanhTien();
             }
             pn.setTongTienNhap(tongTienNhap);
 
-            // 3. Insert phiếu nhập
-            phieuNhapDAO.insert(pn, conn);
+            // 3. Insert phiếu nhập (retry nếu trùng mã)
+            boolean inserted = false;
+            for (int attempt = 0; attempt < 5; attempt++) {
+                pn.setMaPhieuNhap(phieuNhapDAO.generateId());
+                for (CTPhieuNhapHangDTO ct : dsCT) {
+                    ct.setMaPhieuNhap(pn.getMaPhieuNhap());
+                }
+                try {
+                    inserted = phieuNhapDAO.insert(pn, conn);
+                    break;
+                } catch (SQLException ex) {
+                    if (!isDuplicateKey(ex)) {
+                        throw ex;
+                    }
+                }
+            }
+            if (!inserted) {
+                conn.rollback();
+                return false;
+            }
 
             // 4. Insert chi tiết + cộng tồn kho
             for (CTPhieuNhapHangDTO ct : dsCT) {
@@ -95,7 +112,11 @@ public class PhieuNhapHangBUS {
             // 1. Lấy chi tiết cũ → trừ kho (hoàn lại)
             ArrayList<CTPhieuNhapHangDTO> dsCu = ctPhieuNhapDAO.getByMaPhieuNhap(pn.getMaPhieuNhap());
             for (CTPhieuNhapHangDTO ctCu : dsCu) {
-                sanPhamDAO.updateSoLuongTon(ctCu.getMaSP(), ctCu.getSoLuong(), conn);
+                boolean stockOk = sanPhamDAO.updateSoLuongTon(ctCu.getMaSP(), ctCu.getSoLuong(), conn);
+                if (!stockOk) {
+                    conn.rollback();
+                    return false;
+                }
             }
 
             // 2. Xóa chi tiết cũ
@@ -151,7 +172,11 @@ public class PhieuNhapHangBUS {
             // Trừ kho trước
             ArrayList<CTPhieuNhapHangDTO> dsCT = ctPhieuNhapDAO.getByMaPhieuNhap(maPhieuNhap);
             for (CTPhieuNhapHangDTO ct : dsCT) {
-                sanPhamDAO.updateSoLuongTon(ct.getMaSP(), ct.getSoLuong(), conn);
+                boolean stockOk = sanPhamDAO.updateSoLuongTon(ct.getMaSP(), ct.getSoLuong(), conn);
+                if (!stockOk) {
+                    conn.rollback();
+                    return false;
+                }
             }
 
             // Xóa phiếu nhập (cascade xóa chi tiết)
@@ -171,5 +196,12 @@ public class PhieuNhapHangBUS {
                 try { conn.setAutoCommit(true); conn.close(); } catch (Exception ex) { ex.printStackTrace(); }
             }
         }
+    }
+
+    private boolean isDuplicateKey(SQLException ex) {
+        String state = ex.getSQLState();
+        String message = ex.getMessage();
+        return (state != null && state.startsWith("23"))
+                || (message != null && message.toLowerCase().contains("duplicate"));
     }
 }
