@@ -13,9 +13,23 @@ import Backend.DTO.KhachHang_BanHang.HoaDonDTO;
 import Backend.DatabaseHelper;
 
 public class HoaDonBUS {
-    private final HoaDonDAO hoaDonDAO = new HoaDonDAO();
-    private final CTHoaDonDAO ctHoaDonDAO = new CTHoaDonDAO();
-    private final SanPhamDAO sanPhamDAO = new SanPhamDAO();
+    private final HoaDonDAO hoaDonDAO;
+    private final CTHoaDonDAO ctHoaDonDAO;
+    private final SanPhamDAO sanPhamDAO;
+
+    public HoaDonBUS() {
+        this(new HoaDonDAO(), new CTHoaDonDAO(), new SanPhamDAO());
+    }
+
+    public HoaDonBUS(HoaDonDAO hoaDonDAO, CTHoaDonDAO ctHoaDonDAO, SanPhamDAO sanPhamDAO) {
+        this.hoaDonDAO = hoaDonDAO;
+        this.ctHoaDonDAO = ctHoaDonDAO;
+        this.sanPhamDAO = sanPhamDAO;
+    }
+
+    protected Connection openConnection() throws SQLException {
+        return DatabaseHelper.getConnection();
+    }
 
     public ArrayList<HoaDonDTO> getAll() {
         return hoaDonDAO.getAll();
@@ -39,7 +53,7 @@ public class HoaDonBUS {
     public boolean taoHoaDon(HoaDonDTO hd, ArrayList<CTHoaDonDTO> dsCTHD) {
         Connection conn = null;
         try {
-            conn = DatabaseHelper.getConnection();
+            conn = openConnection();
             conn.setAutoCommit(false);
 
             // 1. Sinh mã + set thời gian
@@ -107,7 +121,7 @@ public class HoaDonBUS {
     public boolean suaHoaDon(HoaDonDTO hd, ArrayList<CTHoaDonDTO> dsCTHDMoi) {
         Connection conn = null;
         try {
-            conn = DatabaseHelper.getConnection();
+            conn = openConnection();
             conn.setAutoCommit(false);
 
             // 1. Lấy chi tiết cũ → hoàn kho
@@ -168,7 +182,7 @@ public class HoaDonBUS {
     public boolean xoaHoaDon(String maHD) {
         Connection conn = null;
         try {
-            conn = DatabaseHelper.getConnection();
+            conn = openConnection();
             conn.setAutoCommit(false);
 
             // Hoàn kho

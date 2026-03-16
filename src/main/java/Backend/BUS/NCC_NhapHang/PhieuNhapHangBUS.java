@@ -13,9 +13,23 @@ import Backend.DTO.NCC_NhapHang.PhieuNhapHangDTO;
 import Backend.DatabaseHelper;
 
 public class PhieuNhapHangBUS {
-    private final PhieuNhapHangDAO phieuNhapDAO = new PhieuNhapHangDAO();
-    private final CTPhieuNhapHangDAO ctPhieuNhapDAO = new CTPhieuNhapHangDAO();
-    private final SanPhamDAO sanPhamDAO = new SanPhamDAO();
+    private final PhieuNhapHangDAO phieuNhapDAO;
+    private final CTPhieuNhapHangDAO ctPhieuNhapDAO;
+    private final SanPhamDAO sanPhamDAO;
+
+    public PhieuNhapHangBUS() {
+        this(new PhieuNhapHangDAO(), new CTPhieuNhapHangDAO(), new SanPhamDAO());
+    }
+
+    public PhieuNhapHangBUS(PhieuNhapHangDAO phieuNhapDAO, CTPhieuNhapHangDAO ctPhieuNhapDAO, SanPhamDAO sanPhamDAO) {
+        this.phieuNhapDAO = phieuNhapDAO;
+        this.ctPhieuNhapDAO = ctPhieuNhapDAO;
+        this.sanPhamDAO = sanPhamDAO;
+    }
+
+    protected Connection openConnection() throws SQLException {
+        return DatabaseHelper.getConnection();
+    }
 
     public ArrayList<PhieuNhapHangDTO> getAll() {
         return phieuNhapDAO.getAll();
@@ -39,7 +53,7 @@ public class PhieuNhapHangBUS {
     public boolean taoPhieuNhap(PhieuNhapHangDTO pn, ArrayList<CTPhieuNhapHangDTO> dsCT) {
         Connection conn = null;
         try {
-            conn = DatabaseHelper.getConnection();
+            conn = openConnection();
             conn.setAutoCommit(false);
 
             // 1. Sinh mã + set thời gian
@@ -106,7 +120,7 @@ public class PhieuNhapHangBUS {
     public boolean suaPhieuNhap(PhieuNhapHangDTO pn, ArrayList<CTPhieuNhapHangDTO> dsCTMoi) {
         Connection conn = null;
         try {
-            conn = DatabaseHelper.getConnection();
+            conn = openConnection();
             conn.setAutoCommit(false);
 
             // 1. Lấy chi tiết cũ → trừ kho (hoàn lại)
@@ -166,7 +180,7 @@ public class PhieuNhapHangBUS {
     public boolean xoaPhieuNhap(String maPhieuNhap) {
         Connection conn = null;
         try {
-            conn = DatabaseHelper.getConnection();
+            conn = openConnection();
             conn.setAutoCommit(false);
 
             // Trừ kho trước
