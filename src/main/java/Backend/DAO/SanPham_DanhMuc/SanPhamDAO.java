@@ -10,28 +10,36 @@ import Backend.DTO.SanPham_DanhMuc.SanPhamDTO;
 import Backend.DatabaseHelper;
 
 public class SanPhamDAO {
+    private SanPhamDTO mapRow(ResultSet rs) throws SQLException {
+        SanPhamDTO sp = new SanPhamDTO();
+        sp.setMaSP(rs.getString("MaSP"));
+        sp.setTenSP(rs.getString("Ten"));
+        sp.setSoLuongTon(rs.getInt("SLTonKho"));
+        sp.setDonViTinh(rs.getString("DonViTinh"));
+        sp.setDonGia(rs.getLong("DonGia"));
+        sp.setNamXuatBan(rs.getInt("NamXB"));
+        sp.setMaNXB(rs.getString("MaNXB"));
+        sp.setMaNCC(rs.getString("MaNCC"));
+        sp.setMoTa(rs.getString("MoTa"));
+        sp.setTrangThai(rs.getBoolean("TrangThai"));
+        try { sp.setMaTG(rs.getString("MaTG")); } catch (SQLException ignored) {}
+        try { sp.setMaTL(rs.getString("MaTL")); } catch (SQLException ignored) {}
+        return sp;
+    }
+
+    private static final String SELECT_WITH_JOIN =
+        "SELECT sp.*, stg.MaTG, stl.MaTL FROM sanpham sp " +
+        "LEFT JOIN sanpham_tacgia stg ON sp.MaSP = stg.MaSP " +
+        "LEFT JOIN sanpham_theloai stl ON sp.MaSP = stl.MaSP";
+
     public ArrayList<SanPhamDTO> getAll() {
         ArrayList<SanPhamDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM sanpham";
+        String sql = SELECT_WITH_JOIN + " GROUP BY sp.MaSP";
         try (Connection conn = DatabaseHelper.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            
             while (rs.next()) {
-                SanPhamDTO sp = new SanPhamDTO();
-                sp.setMaSP(rs.getString("MaSP"));
-                sp.setTenSP(rs.getString("Ten"));
-                sp.setMaTG(rs.getString("MaTG")); 
-                sp.setMaTL(rs.getString("MaTL")); 
-                sp.setSoLuongTon(rs.getInt("SLTonKho"));
-                sp.setDonViTinh(rs.getString("DonViTinh"));
-                sp.setDonGia(rs.getLong("DonGia"));
-                sp.setNamXuatBan(rs.getInt("NamXB"));
-                sp.setMaNXB(rs.getString("MaNXB"));
-                sp.setMaNCC(rs.getString("MaNCC"));
-                sp.setMoTa(rs.getString("MoTa"));
-                sp.setTrangThai(rs.getBoolean("TrangThai"));
-                list.add(sp);
+                list.add(mapRow(rs));
             }
         } catch (SQLException e) {
             System.err.println("❌ Lỗi lấy danh sách SP: " + e.getMessage());
@@ -41,29 +49,13 @@ public class SanPhamDAO {
 
     public ArrayList<SanPhamDTO> getActiveOnly() {
         ArrayList<SanPhamDTO> list = new ArrayList<>();
-        // Thêm điều kiện WHERE TrangThai = 1 để lọc các sản phẩm đang kinh doanh
-        String sql = "SELECT * FROM sanpham WHERE TrangThai = 1 ORDER BY MaSP";
+        String sql = SELECT_WITH_JOIN + " WHERE sp.TrangThai = 1 GROUP BY sp.MaSP ORDER BY sp.MaSP";
 
         try (Connection conn = DatabaseHelper.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
             ResultSet rs = ps.executeQuery()) {
-
             while (rs.next()) {
-                SanPhamDTO sp = new SanPhamDTO(
-                    rs.getString("MaSP"),
-                    rs.getString("Ten"),
-                    rs.getString("MaTG"),
-                    rs.getString("MaTL"),
-                    rs.getInt("SLTonKho"),      
-                    rs.getString("DonViTinh"),
-                    rs.getLong("DonGia"),       
-                    rs.getInt("NamXB"),        
-                    rs.getString("MaNXB"),
-                    rs.getString("MaNCC"),
-                    rs.getString("MoTa"),
-                    rs.getBoolean("TrangThai")  
-                );
-                list.add(sp);
+                list.add(mapRow(rs));
             }
         } catch (SQLException e) {
             System.out.println("❌ Lỗi truy vấn getActiveOnly: " + e.getMessage());
@@ -73,68 +65,127 @@ public class SanPhamDAO {
     }
 
     public boolean insert(SanPhamDTO sp) {
-        String sql = "INSERT INTO sanpham (MaSP, Ten, MaTG, MaTL, MaNXB, MaNCC, SLTonKho, DonViTinh, DonGia, NamXB, MoTa, TrangThai) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        
-        try (Connection conn = DatabaseHelper.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            ps.setString(1, sp.getMaSP());
-            ps.setString(2, sp.getTenSP());
-            ps.setString(3, sp.getMaTG()); 
-            ps.setString(4, sp.getMaTL()); 
-            ps.setString(5, sp.getMaNXB());
-            ps.setString(6, sp.getMaNCC());
-            ps.setInt(7, sp.getSoLuongTon());
-            ps.setString(8, sp.getDonViTinh());
-            ps.setLong(9, sp.getDonGia());
-            ps.setInt(10, sp.getNamXuatBan());
-            ps.setString(11, sp.getMoTa());
-            ps.setBoolean(12, sp.isTrangThai());
-            
-            return ps.executeUpdate() > 0;
+        Connection conn = null;
+        try {
+            conn = DatabaseHelper.getConnection();
+            conn.setAutoCommit(false);
+
+            String sql = "INSERT INTO sanpham (MaSP, Ten, MaNXB, MaNCC, SLTonKho, DonViTinh, DonGia, NamXB, MoTa, TrangThai) "
+                       + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, sp.getMaSP());
+                ps.setString(2, sp.getTenSP());
+                ps.setString(3, sp.getMaNXB());
+                ps.setString(4, sp.getMaNCC());
+                ps.setInt(5, sp.getSoLuongTon());
+                ps.setString(6, sp.getDonViTinh());
+                ps.setLong(7, sp.getDonGia());
+                ps.setInt(8, sp.getNamXuatBan());
+                ps.setString(9, sp.getMoTa());
+                ps.setBoolean(10, sp.isTrangThai());
+                ps.executeUpdate();
+            }
+
+            // Insert vào bảng trung gian nếu có MaTG
+            if (sp.getMaTG() != null && !sp.getMaTG().isEmpty()) {
+                try (PreparedStatement ps2 = conn.prepareStatement(
+                        "INSERT IGNORE INTO sanpham_tacgia (MaSP, MaTG) VALUES (?, ?)")) {
+                    ps2.setString(1, sp.getMaSP());
+                    ps2.setString(2, sp.getMaTG());
+                    ps2.executeUpdate();
+                }
+            }
+            // Insert vào bảng trung gian nếu có MaTL
+            if (sp.getMaTL() != null && !sp.getMaTL().isEmpty()) {
+                try (PreparedStatement ps3 = conn.prepareStatement(
+                        "INSERT IGNORE INTO sanpham_theloai (MaSP, MaTL) VALUES (?, ?)")) {
+                    ps3.setString(1, sp.getMaSP());
+                    ps3.setString(2, sp.getMaTL());
+                    ps3.executeUpdate();
+                }
+            }
+
+            conn.commit();
+            return true;
         } catch (SQLException e) {
             System.err.println("❌ Lỗi thêm sản phẩm: " + e.getMessage());
+            try { if (conn != null) conn.rollback(); } catch (SQLException ex) {}
             return false;
+        } finally {
+            try { if (conn != null) { conn.setAutoCommit(true); conn.close(); } } catch (SQLException ex) {}
         }
     }
 
     public boolean update(SanPhamDTO sp) {
-        String sql = "UPDATE sanpham SET Ten=?, MaTG=?, MaTL=?, MaNXB=?, MaNCC=?, SLTonKho=?, DonViTinh=?, DonGia=?, NamXB=?, MoTa=?, TrangThai=? "
-                   + "WHERE MaSP=?";
-        
-        try (Connection conn = DatabaseHelper.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            ps.setString(1, sp.getTenSP());
-            ps.setString(2, sp.getMaTG()); 
-            ps.setString(3, sp.getMaTL()); 
-            ps.setString(4, sp.getMaNXB());
-            ps.setString(5, sp.getMaNCC());
-            ps.setInt(6, sp.getSoLuongTon());
-            ps.setString(7, sp.getDonViTinh());
-            ps.setLong(8, sp.getDonGia());
-            ps.setInt(9, sp.getNamXuatBan());
-            ps.setString(10, sp.getMoTa());
-            ps.setBoolean(11, sp.isTrangThai());
-            ps.setString(12, sp.getMaSP()); 
-            
-            return ps.executeUpdate() > 0;
+        Connection conn = null;
+        try {
+            conn = DatabaseHelper.getConnection();
+            conn.setAutoCommit(false);
+
+            String sql = "UPDATE sanpham SET Ten=?, MaNXB=?, MaNCC=?, SLTonKho=?, DonViTinh=?, DonGia=?, NamXB=?, MoTa=?, TrangThai=? WHERE MaSP=?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, sp.getTenSP());
+                ps.setString(2, sp.getMaNXB());
+                ps.setString(3, sp.getMaNCC());
+                ps.setInt(4, sp.getSoLuongTon());
+                ps.setString(5, sp.getDonViTinh());
+                ps.setLong(6, sp.getDonGia());
+                ps.setInt(7, sp.getNamXuatBan());
+                ps.setString(8, sp.getMoTa());
+                ps.setBoolean(9, sp.isTrangThai());
+                ps.setString(10, sp.getMaSP());
+                ps.executeUpdate();
+            }
+
+            // Cập nhật bảng trung gian tác giả
+            try (PreparedStatement del = conn.prepareStatement("DELETE FROM sanpham_tacgia WHERE MaSP = ?")) {
+                del.setString(1, sp.getMaSP()); del.executeUpdate();
+            }
+            if (sp.getMaTG() != null && !sp.getMaTG().isEmpty()) {
+                try (PreparedStatement ins = conn.prepareStatement(
+                        "INSERT INTO sanpham_tacgia (MaSP, MaTG) VALUES (?, ?)")) {
+                    ins.setString(1, sp.getMaSP());
+                    ins.setString(2, sp.getMaTG());
+                    ins.executeUpdate();
+                }
+            }
+
+            // Cập nhật bảng trung gian thể loại
+            try (PreparedStatement del = conn.prepareStatement("DELETE FROM sanpham_theloai WHERE MaSP = ?")) {
+                del.setString(1, sp.getMaSP()); del.executeUpdate();
+            }
+            if (sp.getMaTL() != null && !sp.getMaTL().isEmpty()) {
+                try (PreparedStatement ins = conn.prepareStatement(
+                        "INSERT INTO sanpham_theloai (MaSP, MaTL) VALUES (?, ?)")) {
+                    ins.setString(1, sp.getMaSP());
+                    ins.setString(2, sp.getMaTL());
+                    ins.executeUpdate();
+                }
+            }
+
+            conn.commit();
+            return true;
         } catch (SQLException e) {
             System.err.println("❌ Lỗi cập nhật sản phẩm: " + e.getMessage());
+            try { if (conn != null) conn.rollback(); } catch (SQLException ex) {}
             return false;
+        } finally {
+            try { if (conn != null) { conn.setAutoCommit(true); conn.close(); } } catch (SQLException ex) {}
         }
     }
 
     public ArrayList<SanPhamDTO> search(String keyword) {
         ArrayList<SanPhamDTO> list = new ArrayList<>();
-        // Câu lệnh SQL nối bảng để tìm theo Tên của Tác giả và Thể loại
-        String sql = "SELECT sp.* FROM sanpham sp " +
-                    "LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG " +
-                    "LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL " +
+        String sql = "SELECT sp.*, stg.MaTG, stl.MaTL FROM sanpham sp " +
+                    "LEFT JOIN sanpham_tacgia stg ON sp.MaSP = stg.MaSP " +
+                    "LEFT JOIN sanpham_theloai stl ON sp.MaSP = stl.MaSP " +
+                    "LEFT JOIN tacgia tg ON stg.MaTG = tg.MaTG " +
+                    "LEFT JOIN theloai tl ON stl.MaTL = tl.MaTL " +
                     "WHERE sp.Ten LIKE ? " +
+                    "OR sp.MaSP LIKE ? " +
                     "OR tg.TenTG LIKE ? " +
-                    "OR tl.TenTL LIKE ?";
+                    "OR tl.TenTL LIKE ? " +
+                    "GROUP BY sp.MaSP";
         
         try (Connection conn = DatabaseHelper.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -143,23 +194,11 @@ public class SanPhamDAO {
             ps.setString(1, searchKey);
             ps.setString(2, searchKey);
             ps.setString(3, searchKey);
+            ps.setString(4, searchKey);
             
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    SanPhamDTO sp = new SanPhamDTO();
-                    sp.setMaSP(rs.getString("MaSP"));
-                    sp.setTenSP(rs.getString("Ten"));
-                    sp.setMaTG(rs.getString("MaTG"));
-                    sp.setMaTL(rs.getString("MaTL"));
-                    sp.setSoLuongTon(rs.getInt("SLTonKho"));
-                    sp.setDonViTinh(rs.getString("DonViTinh"));
-                    sp.setDonGia(rs.getLong("DonGia"));
-                    sp.setNamXuatBan(rs.getInt("NamXB"));
-                    sp.setMaNXB(rs.getString("MaNXB"));
-                    sp.setMaNCC(rs.getString("MaNCC"));
-                    sp.setMoTa(rs.getString("MoTa"));
-                    sp.setTrangThai(rs.getBoolean("TrangThai"));
-                    list.add(sp);
+                    list.add(mapRow(rs));
                 }
             }
         } catch (SQLException e) {
@@ -185,34 +224,24 @@ public class SanPhamDAO {
         return false;
     }
 
-    /**
-     * Trừ số lượng tồn kho khi bán hàng (dùng trong transaction)
-     */
-    public boolean updateSoLuongTon(String maSP, int soLuongBan, Connection conn) {
+    // Trừ số lượng tồn kho (dùng trong transaction khi tạo/sửa hóa đơn)
+    public boolean updateSoLuongTon(String maSP, int soLuongBan, Connection conn) throws SQLException {
         String sql = "UPDATE sanpham SET SLTonKho = SLTonKho - ? WHERE MaSP = ? AND SLTonKho >= ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, soLuongBan);
             ps.setString(2, maSP);
             ps.setInt(3, soLuongBan);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("❌ Lỗi trừ tồn kho: " + e.getMessage());
-            return false;
         }
     }
 
-    /**
-     * Hoàn lại số lượng tồn kho khi xóa/sửa hóa đơn (dùng trong transaction)
-     */
-    public boolean hoanSoLuongTon(String maSP, int soLuong, Connection conn) {
+    // Hoàn lại số lượng tồn kho (dùng khi xóa/sửa hóa đơn)
+    public boolean hoanSoLuongTon(String maSP, int soLuongHoan, Connection conn) throws SQLException {
         String sql = "UPDATE sanpham SET SLTonKho = SLTonKho + ? WHERE MaSP = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, soLuong);
+            ps.setInt(1, soLuongHoan);
             ps.setString(2, maSP);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("❌ Lỗi hoàn tồn kho: " + e.getMessage());
-            return false;
         }
     }
 }
