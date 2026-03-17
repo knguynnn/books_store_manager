@@ -742,10 +742,12 @@ public class BanHangPanel extends JPanel {
                     modelDialog.addRow(new Object[]{kh.getMaKH(), kh.getHoKH(), kh.getTenKH(), kh.getSoDienThoai()});
                 }
             } else {
-                ArrayList<SanPhamDTO> ds = kw.isEmpty() ? sanPhamBUS.getAll() : sanPhamBUS.search(kw);
+                ArrayList<SanPhamDTO> ds = kw.isEmpty() ? sanPhamBUS.getActiveOnly() : sanPhamBUS.search(kw);
                 for (SanPhamDTO sp : ds) {
-                    modelDialog.addRow(new Object[]{sp.getMaSP(), sp.getTenSP(),
-                            String.valueOf(sp.getSoLuongTon()), currencyFormat.format(sp.getDonGia())});
+                    if (sp.isTrangThai()) {
+                        modelDialog.addRow(new Object[]{sp.getMaSP(), sp.getTenSP(),
+                                String.valueOf(sp.getSoLuongTon()), currencyFormat.format(sp.getDonGia())});
+                    }
                 }
             }
         };
@@ -832,6 +834,9 @@ public class BanHangPanel extends JPanel {
         String giamGia = safeGet(modelHoaDon, row, 6);
         String tongThanhToan = safeGet(modelHoaDon, row, 7);
 
+        String thongTinNV = getNhanVienDisplay(maNV);
+        String thongTinKH = getKhachHangDisplay(maKH);
+
         // Lấy chi tiết hóa đơn
         ArrayList<CTHoaDonDTO> dsCT = ctHoaDonBUS.getByMaHD(maHD);
 
@@ -882,9 +887,9 @@ public class BanHangPanel extends JPanel {
             addInfoCell(infoTable, thoiGian, fontValue);
 
             addInfoCell(infoTable, "Nhân viên:", fontLabel);
-            addInfoCell(infoTable, maNV, fontValue);
+            addInfoCell(infoTable, thongTinNV, fontValue);
             addInfoCell(infoTable, "Khách hàng:", fontLabel);
-            addInfoCell(infoTable, maKH, fontValue);
+            addInfoCell(infoTable, thongTinKH, fontValue);
 
             addInfoCell(infoTable, "Khuyến mãi:", fontLabel);
             addInfoCell(infoTable, maKM.isEmpty() ? "Không" : maKM, fontValue);
@@ -1003,6 +1008,8 @@ public class BanHangPanel extends JPanel {
     }
 
     private void loadComboData() {
+        sanPhamBUS.refreshData();
+
         // Nhân viên
         cboMaNV.removeAllItems();
         cboMaNV.addItem("");
@@ -1020,14 +1027,14 @@ public class BanHangPanel extends JPanel {
         // Khuyến mãi (chỉ lấy đang hiệu lực)
         cboMaKM.removeAllItems();
         cboMaKM.addItem("");
-        for (KhuyenMaiDTO km : khuyenMaiBUS.getAll()) {
+        for (KhuyenMaiDTO km : khuyenMaiBUS.getActive()) {
             cboMaKM.addItem(km.getMaKM());
         }
 
         // Sản phẩm
         cboMaSP.removeAllItems();
         cboMaSP.addItem("");
-        for (SanPhamDTO sp : sanPhamBUS.getAll()) {
+        for (SanPhamDTO sp : sanPhamBUS.getActiveOnly()) {
             cboMaSP.addItem(sp.getMaSP());
         }
     }
@@ -1170,22 +1177,12 @@ public class BanHangPanel extends JPanel {
     }
 
     private void taoHoaDon() {
+        if (!validateHoaDonInput()) {
+            return;
+        }
+
         Object nvSelected = cboMaNV.getSelectedItem();
-        if (nvSelected == null || nvSelected.toString().trim().isEmpty()) {
-            showWarning("Vui lòng chọn nhân viên!");
-            cboMaNV.requestFocus();
-            return;
-        }
         Object khSelected = cboMaKH.getSelectedItem();
-        if (khSelected == null || khSelected.toString().trim().isEmpty()) {
-            showWarning("Vui lòng chọn khách hàng!");
-            cboMaKH.requestFocus();
-            return;
-        }
-        if (modelCTHD.getRowCount() == 0) {
-            showWarning("Hóa đơn chưa có sản phẩm nào!");
-            return;
-        }
 
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Xác nhận tạo hóa đơn mới?\n\n"
@@ -1236,6 +1233,10 @@ public class BanHangPanel extends JPanel {
     private void suaHoaDon() {
         if (!isEditing) {
             showWarning("Vui lòng chọn hóa đơn cần sửa!");
+            return;
+        }
+
+        if (!validateHoaDonInput()) {
             return;
         }
 
@@ -1379,6 +1380,32 @@ public class BanHangPanel extends JPanel {
         combo.setSelectedItem(value);
     }
 
+    private String getNhanVienDisplay(String maNV) {
+        if (maNV == null || maNV.trim().isEmpty()) return "";
+        NhanVienDTO nv = nhanVienBUS.getNhanVienByID(maNV.trim());
+        if (nv == null) return maNV;
+
+        String ho = nv.getHoNV() != null ? nv.getHoNV().trim() : "";
+        String ten = nv.getTenNV() != null ? nv.getTenNV().trim() : "";
+        String hoTen = (ho + " " + ten).trim();
+        if (hoTen.isEmpty()) return maNV;
+        return maNV + " - " + hoTen;
+    }
+
+    private String getKhachHangDisplay(String maKH) {
+        if (maKH == null || maKH.trim().isEmpty()) return "";
+        for (KhachHangDTO kh : khachHangBUS.getAll()) {
+            if (kh.getMaKH().equals(maKH.trim())) {
+                String ho = kh.getHoKH() != null ? kh.getHoKH().trim() : "";
+                String ten = kh.getTenKH() != null ? kh.getTenKH().trim() : "";
+                String hoTen = (ho + " " + ten).trim();
+                if (hoTen.isEmpty()) return maKH;
+                return maKH + " - " + hoTen;
+            }
+        }
+        return maKH;
+    }
+
     private JTextField createTextField(String placeholder) {
         JTextField textField = new JTextField();
         textField.putClientProperty("JTextField.placeholderText", placeholder);
@@ -1444,6 +1471,29 @@ public class BanHangPanel extends JPanel {
 
     private void showInfo(String msg) {
         JOptionPane.showMessageDialog(this, msg, "Thông tin", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private boolean validateHoaDonInput() {
+        Object nvSelected = cboMaNV.getSelectedItem();
+        if (nvSelected == null || nvSelected.toString().trim().isEmpty()) {
+            showWarning("Vui lòng chọn nhân viên!");
+            cboMaNV.requestFocus();
+            return false;
+        }
+
+        Object khSelected = cboMaKH.getSelectedItem();
+        if (khSelected == null || khSelected.toString().trim().isEmpty()) {
+            showWarning("Vui lòng chọn khách hàng!");
+            cboMaKH.requestFocus();
+            return false;
+        }
+
+        if (modelCTHD.getRowCount() == 0) {
+            showWarning("Hóa đơn phải có ít nhất 1 sản phẩm!");
+            return false;
+        }
+
+        return true;
     }
 
     private long parseCurrency(String text) {
