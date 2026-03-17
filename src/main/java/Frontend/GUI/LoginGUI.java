@@ -28,54 +28,39 @@ public class LoginGUI extends JFrame {
 
     private void initComponent() {
         setTitle("Books_store_manager");
-        setSize(1100, 650); 
+        // 1. TĂNG KÍCH THƯỚC TỔNG THỂ (1150x600)
+        setSize(1150, 600); 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
         setUndecorated(true); 
 
-        JPanel pnlRoot = new JPanel(new BorderLayout());
-        pnlRoot.setBackground(new Color(191, 219, 237)); 
-        pnlRoot.setBorder(BorderFactory.createEmptyBorder(15, 25, 20, 25));
-
-        // --- HEADER ---
-        JPanel pnlTop = new JPanel(new BorderLayout());
-        pnlTop.setOpaque(false);
-        JLabel lblTitle = new JLabel("Books_store_manager");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        lblTitle.setForeground(new Color(30, 150, 80)); 
-
-        JButton btnClose = new JButton("X");
-        btnClose.setFont(new Font("Segoe UI", Font.BOLD, 12)); 
-        btnClose.setForeground(Color.WHITE);
-        btnClose.setBackground(new Color(220, 38, 38));
-        btnClose.setPreferredSize(new Dimension(28, 28));
-        btnClose.setFocusPainted(false);
-        btnClose.setBorderPainted(false);
-        btnClose.addActionListener(e -> System.exit(0));
-
-        pnlTop.add(lblTitle, BorderLayout.WEST);
-        pnlTop.add(btnClose, BorderLayout.EAST);
-        pnlRoot.add(pnlTop, BorderLayout.NORTH);
-
-        // --- KHU VỰC CHÍNH ---
-        JPanel pnlCenter = new JPanel(new GridBagLayout());
-        pnlCenter.setOpaque(false);
-
-        JPanel pnlMain = new JPanel(new BorderLayout()) {
+        // 2. Panel nội dung chính (pnlMain)
+        JPanel pnlMain = new JPanel(null) { // Dùng null layout để quản lý chính xác tọa độ
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.WHITE);
+                g2.setColor(new Color(235, 235, 235)); // Màu nền form sáng hơn một chút
                 g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 30, 30));
                 g2.dispose();
             }
         };
-        pnlMain.setPreferredSize(new Dimension(1020, 530));
         pnlMain.setOpaque(false);
 
-        // **SLIDESHOW ẢNH**
+        // 3. Nút đóng (X)
+        JButton btnClose = new JButton("X");
+        btnClose.setFont(new Font("Segoe UI", Font.BOLD, 12)); 
+        btnClose.setForeground(Color.WHITE);
+        btnClose.setBackground(new Color(220, 38, 38));
+        btnClose.setBounds(1110, 10, 30, 30); 
+        btnClose.setFocusPainted(false);
+        btnClose.setBorderPainted(false);
+        btnClose.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnClose.addActionListener(e -> System.exit(0));
+        pnlMain.add(btnClose);
+
+        // --- KHU VỰC SLIDESHOW (Rộng 750px) ---
         List<String> imagePaths = new ArrayList<>();
         String baseDir = "src/main/resources/images/product/";
         imagePaths.add(baseDir + "congtruong.jpg"); 
@@ -83,18 +68,19 @@ public class LoginGUI extends JFrame {
         imagePaths.add(baseDir + "khuB.jpg");
         imagePaths.add(baseDir + "anhNen2.jpg");
         
-        slideshowPanel = new ImageSlideshowPanel(imagePaths, 4000);
-        slideshowPanel.setPreferredSize(new Dimension(650, 530)); 
-        pnlMain.add(slideshowPanel, BorderLayout.WEST);
+        slideshowPanel = new ImageSlideshowPanel(imagePaths, 4500);
+        slideshowPanel.setBounds(0, 0, 750, 600); // Tăng chiều rộng ảnh
+        pnlMain.add(slideshowPanel);
 
-        // **FORM ĐĂNG NHẬP**
-        JPanel pnlForm = new JPanel(new MigLayout("wrap, insets 40 40 40 40, fillx", "[fill]", "[]10[]30[]5[]20[]30[]"));
+        // --- KHU VỰC FORM (Rộng 400px) ---
+        JPanel pnlForm = new JPanel(new MigLayout("wrap, insets 60 50 40 50, fillx", "[fill]", "[]10[]40[]10[]20[]10[]40[]"));
         pnlForm.setOpaque(false);
+        pnlForm.setBounds(750, 0, 400, 600); // Đặt chính xác sau phần ảnh
 
-        JLabel lbLoginIcon = new JLabel(new FlatSVGIcon("images/icon/user-black.svg", 45, 45));
+        JLabel lbLoginIcon = new JLabel(new FlatSVGIcon("images/icon/user-black.svg", 60, 60));
         lbLoginIcon.setHorizontalAlignment(SwingConstants.CENTER);
         JLabel lbLoginTitle = new JLabel("LOGIN", SwingConstants.CENTER);
-        lbLoginTitle.setFont(new Font("Segoe UI", Font.BOLD, 32));
+        lbLoginTitle.setFont(new Font("Segoe UI", Font.BOLD, 36));
         lbLoginTitle.setForeground(Theme.PRIMARY);
 
         pnlForm.add(lbLoginIcon, "center");
@@ -103,18 +89,18 @@ public class LoginGUI extends JFrame {
         txtUsername = new JTextField();
         txtUsername.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         txtUsername.putClientProperty("JTextField.placeholderText", "Tên đăng nhập");
-        txtUsername.putClientProperty("JTextField.leadingIcon", new FlatSVGIcon("images/icon/square-user-black.svg", 20, 20));
+        txtUsername.putClientProperty("JTextField.leadingIcon", new FlatSVGIcon("images/icon/square-user-black.svg", 22, 22));
 
         txtPassword = new JPasswordField();
         txtPassword.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         txtPassword.putClientProperty("JTextField.placeholderText", "Mật khẩu");
-        txtPassword.putClientProperty("JTextField.leadingIcon", new FlatSVGIcon("images/icon/shield-check-black.svg", 20, 20));
+        txtPassword.putClientProperty("JTextField.leadingIcon", new FlatSVGIcon("images/icon/shield-check-black.svg", 22, 22));
         txtPassword.putClientProperty("JPasswordField.revealIcon", true);
 
         pnlForm.add(new JLabel("Username"), "gapleft 5");
-        pnlForm.add(txtUsername, "h 45!");
+        pnlForm.add(txtUsername, "h 48!");
         pnlForm.add(new JLabel("Password"), "gapleft 5, gaptop 10");
-        pnlForm.add(txtPassword, "h 45!");
+        pnlForm.add(txtPassword, "h 48!");
 
         btnLogin = new JButton("ĐĂNG NHẬP");
         btnLogin.setFont(new Font("Segoe UI", Font.BOLD, 16));
@@ -124,15 +110,12 @@ public class LoginGUI extends JFrame {
         btnLogin.putClientProperty("JButton.buttonType", "roundRect");
         
         btnLogin.addActionListener(this::handleLogin);
+        pnlForm.add(btnLogin, "h 55!, gaptop 20");
+
+        pnlMain.add(pnlForm);
+        this.setContentPane(pnlMain);
         getRootPane().setDefaultButton(btnLogin);
-
-        pnlForm.add(btnLogin, "h 50!, gaptop 10");
-
-        pnlMain.add(pnlForm, BorderLayout.CENTER);
-        pnlCenter.add(pnlMain);
-        pnlRoot.add(pnlCenter, BorderLayout.CENTER);
-
-        add(pnlRoot);
+        setBackground(new Color(0, 0, 0, 0));
     }
 
     private void handleLogin(ActionEvent e) {
@@ -150,18 +133,16 @@ public class LoginGUI extends JFrame {
                 JOptionPane.showMessageDialog(this, result, "Thông báo", JOptionPane.WARNING_MESSAGE);
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi kết nối Database!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Lỗi kết nối!", "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    // --- CLASS SLIDESHOW VỚI HIỆU ỨNG CHẠY TỪ PHẢI SANG TRÁI ---
     private static class ImageSlideshowPanel extends JPanel {
         private List<Image> images = new ArrayList<>();
         private int currentIndex = 0;
         private int nextIndex = 1;
-        private int xOffset = 0; // Vị trí dịch chuyển của ảnh
-        private Timer timer;
-        private Timer slideTimer;
+        private int xOffset = 0;
+        private Timer timer, slideTimer;
 
         public ImageSlideshowPanel(List<String> imagePaths, int delay) {
             setOpaque(false);
@@ -170,8 +151,6 @@ public class LoginGUI extends JFrame {
                 if (f.exists()) images.add(new ImageIcon(f.getAbsolutePath()).getImage());
             }
             if (images.size() < 2) return;
-
-            // Timer chính chờ để bắt đầu trượt
             timer = new Timer(delay, e -> startSlide());
             timer.start();
         }
@@ -180,12 +159,10 @@ public class LoginGUI extends JFrame {
             if (slideTimer != null && slideTimer.isRunning()) return;
             xOffset = 0;
             nextIndex = (currentIndex + 1) % images.size();
-
-            // slideTimer thực hiện việc dịch chuyển tọa độ x
-            slideTimer = new Timer(10, new ActionListener() {
+            slideTimer = new Timer(15, new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    xOffset -= 15; // Tốc độ trượt (có thể tăng/giảm số này)
+                    xOffset -= 20; // Tốc độ trượt
                     if (Math.abs(xOffset) >= getWidth()) {
                         currentIndex = nextIndex;
                         xOffset = 0;
@@ -201,32 +178,34 @@ public class LoginGUI extends JFrame {
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
             
-            // Bo góc mượt cho khu vực hiển thị ảnh
-            Shape clip = new RoundRectangle2D.Double(0, 0, getWidth() + 50, getHeight(), 30, 30);
+            // CẮT BO GÓC BÊN TRÁI (Chỉ bo góc trái của ảnh)
+            Shape clip = new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 30, 30);
             g2.setClip(clip);
 
             if (!images.isEmpty()) {
-                // Vẽ ảnh hiện tại
-                g2.drawImage(images.get(currentIndex), xOffset, 0, getWidth(), getHeight(), this);
-                
-                // Vẽ ảnh tiếp theo đang tràn vào từ bên phải
+                drawScaledImage(g2, images.get(currentIndex), xOffset);
                 if (xOffset != 0) {
-                    g2.drawImage(images.get(nextIndex), getWidth() + xOffset, 0, getWidth(), getHeight(), this);
+                    drawScaledImage(g2, images.get(nextIndex), getWidth() + xOffset);
                 }
             }
             g2.dispose();
+        }
+
+        private void drawScaledImage(Graphics2D g2, Image img, int x) {
+            // Logic Center Crop: Đảm bảo ảnh luôn lấp đầy vùng hiển thị mà không bị méo
+            int imgW = img.getWidth(null);
+            int imgH = img.getHeight(null);
+            double s = Math.max((double) getWidth() / imgW, (double) getHeight() / imgH);
+            int w = (int) (s * imgW);
+            int h = (int) (s * imgH);
+            int y = (getHeight() - h) / 2;
+            g2.drawImage(img, x, y, w, h, null);
         }
 
         public void stop() {
             if (timer != null) timer.stop();
             if (slideTimer != null) slideTimer.stop();
         }
-    }
-
-    public static void main(String[] args) {
-        try { UIManager.setLookAndFeel(new com.formdev.flatlaf.FlatLightLaf()); } catch (Exception e) {}
-        SwingUtilities.invokeLater(() -> new LoginGUI().setVisible(true));
     }
 }
