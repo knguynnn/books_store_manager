@@ -1,12 +1,18 @@
 package Frontend.GUI.NhaCungCapGUI;
 
 import Frontend.Compoent.*;
+import Backend.BUS.NCC_NhapHang.NhaCungCapBUS;
+import Backend.DTO.NCC_NhapHang.NhaCungCapDTO;
+
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.table.*;
 import java.awt.*;
 
 public class NhaCungCapPanel extends JPanel {
+    private NhaCungCapBUS bus = new NhaCungCapBUS();
+    private boolean isEditing = false; 
+    
     private Table tableNCC;
     private DefaultTableModel modelNCC;
 
@@ -45,6 +51,8 @@ public class NhaCungCapPanel extends JPanel {
         add(mainSplit, BorderLayout.CENTER);
 
         initEvents();
+        loadData();
+        setNewMaNCC();
     }
 
     private JPanel createLeftFormPanel() {
@@ -98,8 +106,7 @@ public class NhaCungCapPanel extends JPanel {
         return wrapper;
     }
 
-    private void addFormRow(JPanel panel, GridBagConstraints gbc, int row,
-                            String labelText, InfoField field) {
+    private void addFormRow(JPanel panel, GridBagConstraints gbc, int row, String labelText, InfoField field) {
         gbc.gridx = 0; gbc.gridy = row;
         gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
         gbc.gridwidth = 1;
@@ -177,11 +184,41 @@ public class NhaCungCapPanel extends JPanel {
         return panel;
     }
 
+    // --- LOGIC & EVENTS ---
+
+    public void loadData() {
+        modelNCC.setRowCount(0);
+        for (NhaCungCapDTO ncc : bus.getAll()) {
+            modelNCC.addRow(new Object[]{
+                ncc.getMaNCC(), ncc.getTenNCC(), ncc.getSdt(), ncc.getDiaChi(), ncc.getEmail()
+            });
+        }
+    }
+
+    private void setNewMaNCC() {
+        txtMaNCC.setText(bus.generateNewMaNCC());
+        isEditing = false;
+        btnThem.setText("Thêm");
+    }
+
+    private void timKiem() {
+        String key = txtTimKiem.getText().trim();
+        modelNCC.setRowCount(0);
+        for (NhaCungCapDTO ncc : bus.search(key)) {
+            modelNCC.addRow(new Object[]{
+                ncc.getMaNCC(), ncc.getTenNCC(), ncc.getSdt(), ncc.getDiaChi(), ncc.getEmail()
+            });
+        }
+    }
+
     private void initEvents() {
+        // 1. Click vào bảng
         tableNCC.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 int row = tableNCC.getSelectedRow();
                 if (row >= 0) {
+                    isEditing = true;
+                    btnThem.setText("Lưu");
                     txtMaNCC.setText(val(row, 0));
                     txtTenNCC.setText(val(row, 1));
                     txtSDT.setText(val(row, 2));
@@ -189,6 +226,68 @@ public class NhaCungCapPanel extends JPanel {
                     txtEmail.setText(val(row, 4));
                 }
             }
+        });
+
+        // 2. Thêm / Lưu (ĐÃ SỬA: Xóa bỏ tham số "true")
+        btnThem.addActionListener(e -> {
+            if (!validateNCC()) return;
+            NhaCungCapDTO ncc = new NhaCungCapDTO(
+                txtMaNCC.getText().trim(), 
+                txtTenNCC.getText().trim(),
+                txtSDT.getText().trim(), 
+                txtDiaChi.getText().trim(),
+                txtEmail.getText().trim()
+            );
+            
+            if (isEditing) {
+                if (bus.updateNCC(ncc)) {
+                    JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
+                    loadData(); resetForm(); setNewMaNCC();
+                } else JOptionPane.showMessageDialog(this, "Cập nhật thất bại!");
+            } else {
+                if (bus.addNCC(ncc)) {
+                    JOptionPane.showMessageDialog(this, "Thêm thành công!");
+                    loadData(); resetForm(); setNewMaNCC();
+                } else JOptionPane.showMessageDialog(this, "Thêm thất bại!");
+            }
+        });
+
+        // 3. Sửa (Bấm nút Sửa sẽ kích hoạt logic Lưu)
+        btnSua.addActionListener(e -> {
+            if (!isEditing) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn nhà cung cấp cần sửa dưới bảng!");
+                return;
+            }
+            btnThem.doClick(); 
+        });
+
+        // 4. Xóa
+        btnXoa.addActionListener(e -> {
+            if (!isEditing) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn nhà cung cấp cần xóa!");
+                return;
+            }
+            if (JOptionPane.showConfirmDialog(this, "Xác nhận xóa nhà cung cấp này?") == JOptionPane.YES_OPTION) {
+                if (bus.deleteNCC(txtMaNCC.getText())) {
+                    JOptionPane.showMessageDialog(this, "Xóa thành công!");
+                    loadData(); resetForm(); setNewMaNCC();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Xóa thất bại! Nhà cung cấp này có thể đang có phiếu nhập hàng.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        // 5. Làm mới form
+        btnMoi.addActionListener(e -> {
+            resetForm();
+            setNewMaNCC();
+        });
+
+        // 6. Tìm kiếm Real-time
+        txtTimKiem.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { timKiem(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { timKiem(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { timKiem(); }
         });
     }
 
@@ -200,41 +299,32 @@ public class NhaCungCapPanel extends JPanel {
     public boolean validateNCC() {
         if (txtTenNCC.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Tên NCC không được để trống!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            txtTenNCC.requestFocus();
-            return false;
+            txtTenNCC.requestFocus(); return false;
         }
         if (txtSDT.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "SĐT không được để trống!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            txtSDT.requestFocus();
-            return false;
+            txtSDT.requestFocus(); return false;
         }
         String sdt = txtSDT.getText().trim();
         if (!sdt.matches("\\d{10,11}")) {
             JOptionPane.showMessageDialog(this, "SĐT phải là 10-11 chữ số!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            txtSDT.requestFocus();
-            return false;
+            txtSDT.requestFocus(); return false;
         }
         if (txtDiaChi.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Địa chỉ không được để trống!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            txtDiaChi.requestFocus();
-            return false;
+            txtDiaChi.requestFocus(); return false;
         }
         String email = txtEmail.getText().trim();
         if (!email.isEmpty() && !email.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
             JOptionPane.showMessageDialog(this, "Email không hợp lệ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            txtEmail.requestFocus();
-            return false;
+            txtEmail.requestFocus(); return false;
         }
         return true;
     }
 
     public void resetForm() {
-        txtMaNCC.setText("");
-        txtTenNCC.setText("");
-        txtSDT.setText("");
-        txtDiaChi.setText("");
-        txtEmail.setText("");
-        txtTimKiem.setText("");
+        txtMaNCC.setText(""); txtTenNCC.setText(""); txtSDT.setText("");
+        txtDiaChi.setText(""); txtEmail.setText(""); txtTimKiem.setText("");
         tableNCC.clearSelection();
     }
 
@@ -246,6 +336,7 @@ public class NhaCungCapPanel extends JPanel {
         return label;
     }
 
+    // Getters
     public Table getTableNCC() { return tableNCC; }
     public DefaultTableModel getModelNCC() { return modelNCC; }
     public SearchTextField getTxtTimKiem() { return txtTimKiem; }
