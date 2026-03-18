@@ -1,12 +1,24 @@
 package Frontend.GUI.NhapHangGUI;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.List;
 
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 import Backend.BUS.NCC_NhapHang.CTPhieuNhapHangBUS;
 import Backend.BUS.NCC_NhapHang.NhaCungCapBUS;
@@ -92,6 +104,183 @@ public class NhapHangController {
 
         view.getBtnXuat().addActionListener(e -> XuatExcel.xuat(view.getTablePhieuNhap(), "DanhSachPhieuNhap"));
         view.getBtnXuatPDF().addActionListener(e -> XuatPDF.xuat(view.getTablePhieuNhap(), "Danh sách phiếu nhập"));
+        view.getBtnNhapExcel().addActionListener(e -> handleNhapExcel());
+    }
+
+    private void handleNhapExcel() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Chọn file Excel chi tiết nhập hàng");
+        chooser.setFileFilter(new FileNameExtensionFilter("Excel Files (*.xlsx, *.xls)", "xlsx", "xls"));
+
+        if (chooser.showOpenDialog(view) != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        File excelFile = chooser.getSelectedFile();
+        importChiTietFromExcel(excelFile);
+    }
+
+    private void importChiTietFromExcel(File excelFile) {
+        int importedRows = 0;
+        int skippedRows = 0;
+        List<String> errorRows = new ArrayList<>();
+        String maPhieu = view.getTxtMaPhieuNhap().getText().trim();
+
+        try (FileInputStream fis = new FileInputStream(excelFile);
+                Workbook workbook = WorkbookFactory.create(fis)) {
+
+            if (workbook.getNumberOfSheets() == 0) {
+                JOptionPane.showMessageDialog(view, "File Excel không có sheet dữ liệu.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            Sheet sheet = workbook.getSheetAt(0);
+            DataFormatter formatter = new DataFormatter();
+            int firstRow = sheet.getFirstRowNum();
+            int lastRow = sheet.getLastRowNum();
+
+            for (int rowIndex = firstRow; rowIndex <= lastRow; rowIndex++) {
+                Row row = sheet.getRow(rowIndex);
+                if (row == null) {
+                    continue;
+                }
+
+                String maSP = readTextCell(row.getCell(0), formatter);
+                String soLuongText = readTextCell(row.getCell(1), formatter);
+                String donGiaText = readTextCell(row.getCell(2), formatter);
+
+                if (maSP.isEmpty() && soLuongText.isEmpty() && donGiaText.isEmpty()) {
+                    continue;
+                }
+
+                if (isLikelyHeaderRow(rowIndex, firstRow, maSP, soLuongText, donGiaText)) {
+                    continue;
+                }
+
+                if (maSP.isEmpty()) {
+                    skippedRows++;
+                    collectError(errorRows, rowIndex, "Mã sản phẩm trống");
+                    continue;
+                }
+
+                maSP = maSP.toUpperCase();
+
+                if (!sanPhamBUS.isMaSPExist(maSP)) {
+                    skippedRows++;
+                    collectError(errorRows, rowIndex, "Không tìm thấy mã sản phẩm " + maSP);
+                    continue;
+                }
+
+                int soLuong;
+                long donGia;
+                try {
+                    soLuong = parseSoLuong(soLuongText);
+                    donGia = parseDonGia(donGiaText);
+                } catch (NumberFormatException ex) {
+                    skippedRows++;
+                    collectError(errorRows, rowIndex, ex.getMessage());
+                    continue;
+                }
+
+                mergeChiTiet(maPhieu, maSP, soLuong, donGia);
+                importedRows++;
+            }
+
+            loadChiTietTable();
+
+            StringBuilder message = new StringBuilder();
+            message.append("Nhập Excel hoàn tất.\n")
+                    .append("- Dòng hợp lệ: ").append(importedRows).append("\n")
+                    .append("- Dòng bỏ qua: ").append(skippedRows);
+
+            if (!errorRows.isEmpty()) {
+                message.append("\n\nChi tiết lỗi (tối đa 10 dòng):\n");
+                for (String err : errorRows) {
+                    message.append("- ").append(err).append("\n");
+                }
+            }
+
+            JOptionPane.showMessageDialog(view, message.toString(), "Kết quả nhập Excel", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(view,
+                    "Không thể đọc file Excel: " + ex.getMessage(),
+                    "Lỗi nhập Excel",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void mergeChiTiet(String maPhieu, String maSP, int soLuong, long donGia) {
+        CTPhieuNhapHangDTO existing = null;
+        for (CTPhieuNhapHangDTO ct : chiTietTam) {
+            if (ct.getMaSP().equalsIgnoreCase(maSP)) {
+                existing = ct;
+                break;
+            }
+        }
+
+        if (existing != null) {
+            existing.setSoLuong(existing.getSoLuong() + soLuong);
+            existing.setDonGiaNhap(donGia);
+            existing.setThanhTien(existing.getSoLuong() * existing.getDonGiaNhap());
+            return;
+        }
+
+        CTPhieuNhapHangDTO ct = new CTPhieuNhapHangDTO();
+        ct.setMaPhieuNhap(maPhieu);
+        ct.setMaSP(maSP);
+        ct.setSoLuong(soLuong);
+        ct.setDonGiaNhap(donGia);
+        ct.setThanhTien((long) soLuong * donGia);
+        chiTietTam.add(ct);
+    }
+
+    private String readTextCell(Cell cell, DataFormatter formatter) {
+        if (cell == null) {
+            return "";
+        }
+        String value = formatter.formatCellValue(cell);
+        return value == null ? "" : value.trim();
+    }
+
+    private boolean isLikelyHeaderRow(int rowIndex, int firstRow, String maSP, String soLuong, String donGia) {
+        if (rowIndex != firstRow) {
+            return false;
+        }
+        String text = (maSP + " " + soLuong + " " + donGia).toLowerCase();
+        return text.contains("mã") || text.contains("ma") || text.contains("số lượng") || text.contains("don gia") || text.contains("đơn giá");
+    }
+
+    private int parseSoLuong(String text) {
+        if (text == null || text.isBlank()) {
+            throw new NumberFormatException("Số lượng trống");
+        }
+        String digits = text.replaceAll("[^0-9]", "");
+        if (digits.isEmpty()) {
+            throw new NumberFormatException("Số lượng không hợp lệ");
+        }
+        int soLuong = Integer.parseInt(digits);
+        if (soLuong <= 0) {
+            throw new NumberFormatException("Số lượng phải > 0");
+        }
+        return soLuong;
+    }
+
+    private long parseDonGia(String text) {
+        if (text == null || text.isBlank()) {
+            throw new NumberFormatException("Đơn giá trống");
+        }
+        long donGia = NhapHangActions.parseMoney(text);
+        if (donGia <= 0) {
+            throw new NumberFormatException("Đơn giá phải > 0");
+        }
+        return donGia;
+    }
+
+    private void collectError(List<String> errorRows, int rowIndex, String reason) {
+        if (errorRows.size() >= 10) {
+            return;
+        }
+        errorRows.add("Dòng " + (rowIndex + 1) + ": " + reason);
     }
 
     private void loadNhanVienCombo() {
