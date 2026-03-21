@@ -35,6 +35,7 @@ import javax.swing.table.TableColumnModel;
 import Frontend.Compoent.ButtonAdd;
 import Frontend.Compoent.ButtonDele;
 import Frontend.Compoent.ButtonFix;
+import Frontend.Compoent.ButtonNhapExcel;
 import Frontend.Compoent.ButtonRefresh;
 import Frontend.Compoent.ButtonXuatExcel;
 import Frontend.Compoent.ButtonXuatPdf;
@@ -82,6 +83,7 @@ public class NhapHangPanel extends JPanel {
     private ButtonRefresh btnMoi;
     private ButtonXuatExcel btnXuat;
     private ButtonXuatPdf btnXuatPDF;
+    private ButtonNhapExcel btnNhapExcel;
     private CustomButton btnThemSP;
     private CustomButton btnXoaSP;
 
@@ -253,9 +255,10 @@ public class NhapHangPanel extends JPanel {
         btnMoi = new ButtonRefresh("Làm mới");
         btnXuat = new ButtonXuatExcel("Xuất Excel");
         btnXuatPDF = new ButtonXuatPdf("Xuất PDF");
+        btnNhapExcel = new ButtonNhapExcel("Nhập Excel");
 
         Font buttonFont = new Font("Segoe UI", Font.BOLD, 11);
-        JButton[] buttons = {btnLuu, btnSua, btnXoa, btnMoi, btnXuat, btnXuatPDF};
+        JButton[] buttons = {btnLuu, btnSua, btnXoa, btnMoi, btnXuat, btnXuatPDF, btnNhapExcel};
         for (JButton btn : buttons) {
             btn.setFont(buttonFont);
             btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -265,8 +268,9 @@ public class NhapHangPanel extends JPanel {
         pnlButtons.add(btnSua, "grow, h " + BUTTON_HEIGHT + "!");
         pnlButtons.add(btnXoa, "grow, h " + BUTTON_HEIGHT + "!");
         pnlButtons.add(btnMoi, "grow, h " + BUTTON_HEIGHT + "!");
-        pnlButtons.add(btnXuat, "span, grow, h " + BUTTON_HEIGHT + "!");
-        pnlButtons.add(btnXuatPDF, "span, grow, h " + BUTTON_HEIGHT + "!");
+        pnlButtons.add(btnXuat, "grow, h " + BUTTON_HEIGHT + "!");
+        pnlButtons.add(btnXuatPDF, "grow, h " + BUTTON_HEIGHT + "!");
+        pnlButtons.add(btnNhapExcel, "span, grow, h " + BUTTON_HEIGHT + "!");
 
         return pnlButtons;
     }
@@ -687,6 +691,7 @@ public class NhapHangPanel extends JPanel {
     public ButtonRefresh getBtnMoi() { return btnMoi; }
     public ButtonXuatExcel getBtnXuat() { return btnXuat; }
     public ButtonXuatPdf getBtnXuatPDF() { return btnXuatPDF; }
+    public ButtonNhapExcel getBtnNhapExcel() { return btnNhapExcel; }
     public CustomButton getBtnThemSP() { return btnThemSP; }
     public CustomButton getBtnXoaSP() { return btnXoaSP; }
     public JTextField getTxtMaPhieuNhap() { return txtMaPhieuNhap; }
