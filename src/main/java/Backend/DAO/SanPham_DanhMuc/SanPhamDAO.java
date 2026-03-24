@@ -183,4 +183,25 @@ public class SanPhamDAO {
         }
         return list;
     }
+
+    // Trừ số lượng tồn kho (dùng trong transaction khi tạo/sửa hóa đơn)
+    public boolean updateSoLuongTon(String maSP, int soLuongBan, Connection conn) throws SQLException {
+        String sql = "UPDATE sanpham SET SLTonKho = SLTonKho - ? WHERE MaSP = ? AND SLTonKho >= ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, soLuongBan);
+            ps.setString(2, maSP);
+            ps.setInt(3, soLuongBan);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    // Hoàn lại số lượng tồn kho (dùng khi xóa/sửa hóa đơn)
+    public boolean hoanSoLuongTon(String maSP, int soLuongHoan, Connection conn) throws SQLException {
+        String sql = "UPDATE sanpham SET SLTonKho = SLTonKho + ? WHERE MaSP = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, soLuongHoan);
+            ps.setString(2, maSP);
+            return ps.executeUpdate() > 0;
+        }
+    }
 }

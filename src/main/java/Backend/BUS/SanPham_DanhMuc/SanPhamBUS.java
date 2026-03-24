@@ -17,6 +17,25 @@ public class SanPhamBUS {
         refreshData();
     }
 
+    public ArrayList<SanPhamDTO> getActiveOnly() {
+        ArrayList<SanPhamDTO> activeList = new ArrayList<>();
+        for (SanPhamDTO sp : listSP) {
+            if (sp.isTrangThai()) {
+                activeList.add(sp);
+            }
+        }
+        return activeList; 
+    }
+
+    public boolean isMaSPExist(String maSP) {
+        for (SanPhamDTO sp : listSP) {
+            if (sp.getMaSP().equalsIgnoreCase(maSP)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void refreshData() {
         this.listSP = spDAO.getAll(); 
     }
