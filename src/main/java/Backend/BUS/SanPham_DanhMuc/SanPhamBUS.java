@@ -3,6 +3,10 @@ package Backend.BUS.SanPham_DanhMuc;
 import Backend.DAO.SanPham_DanhMuc.SanPhamDAO;
 import Backend.DTO.SanPham_DanhMuc.SanPhamDTO;
 import java.util.ArrayList;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.time.Year;
 
 public class SanPhamBUS {
     private ArrayList<SanPhamDTO> listSP;
@@ -10,18 +14,9 @@ public class SanPhamBUS {
 
     public SanPhamBUS() {
         spDAO = new SanPhamDAO();
-        refreshData(); // Tự động load dữ liệu khi khởi tạo giống KhachHangBUS
+        refreshData();
     }
 
-    public void refreshData() {
-        listSP = spDAO.getAll(); // Đồng bộ listSP từ Database
-    }
-
-    public ArrayList<SanPhamDTO> getAll() {
-        return listSP;
-    }
-
-    // Lấy danh sách sản phẩm đang kinh doanh (TrangThai = 1)
     public ArrayList<SanPhamDTO> getActiveOnly() {
         ArrayList<SanPhamDTO> activeList = new ArrayList<>();
         for (SanPhamDTO sp : listSP) {
@@ -29,76 +24,7 @@ public class SanPhamBUS {
                 activeList.add(sp);
             }
         }
-        return activeList; // Logic lọc trên RAM giống KhachHangBUS
-    }
-
-    public boolean addSanPham(SanPhamDTO sp) {
-        boolean check = spDAO.insert(sp); //
-        if (check) {
-            refreshData(); // Load lại toàn bộ danh sách để đồng bộ
-        }
-        return check;
-    }
-
-    public boolean updateSanPham(SanPhamDTO sp) {
-        boolean check = spDAO.update(sp); //
-        if (check) {
-            refreshData(); // Load lại toàn bộ danh sách để đồng bộ
-        }
-        return check;
-    }
-
-    public boolean deleteSanPham(String maSP) {
-        boolean check = spDAO.delete(maSP); 
-        if (check) {
-            refreshData(); 
-        }
-        return check;
-    }
-
-    // Hàm tạo mã mới tự động 
-    public String generateNewMaSP() {
-        if (listSP.isEmpty()) {
-            return "SP001";
-        }
-
-        int maxNumber = 0;
-        for (SanPhamDTO sp : listSP) {
-            String maSP = sp.getMaSP();
-            if (maSP.startsWith("SP")) {
-                try {
-                    int number = Integer.parseInt(maSP.substring(2));
-                    if (number > maxNumber) {
-                        maxNumber = number;
-                    }
-                } catch (NumberFormatException e) {
-                    // Bỏ qua nếu mã không đúng định dạng số
-                }
-            }
-        }
-        return String.format("SP%03d", maxNumber + 1);
-    }
-
-    public ArrayList<SanPhamDTO> search(String keyword) {
-        ArrayList<SanPhamDTO> result = new ArrayList<>();
-        String kw = keyword.toLowerCase();
-        for (SanPhamDTO sp : listSP) {
-            // Tìm kiếm trên RAM để đồng nhất với cách làm của KhachHangBUS
-            if (sp.getTenSP().toLowerCase().contains(kw) || 
-                sp.getMaSP().toLowerCase().contains(kw)) {
-                result.add(sp);
-            }
-        }
-        return result;
-    }
-    
-    public SanPhamDTO getById(String maSP) {
-        for (SanPhamDTO sp : listSP) {
-            if (sp.getMaSP().equalsIgnoreCase(maSP)) {
-                return sp;
-            }
-        }
-        return null;
+        return activeList; 
     }
 
     public boolean isMaSPExist(String maSP) {
@@ -109,4 +35,115 @@ public class SanPhamBUS {
         }
         return false;
     }
+
+    public void refreshData() {
+        this.listSP = spDAO.getAll(); 
+    }
+
+    public ArrayList<SanPhamDTO> getAll() {
+        return listSP;
+    }
+
+    public boolean deleteSanPham(String maSP) {
+        if (spDAO.delete(maSP)) {
+            refreshData(); // Load lại listSP (đã lọc TrangThai=1)
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Logic Thêm: Tự động tạo mã, xử lý lưu file ảnh vật lý
+     */
+    public String validateAndAdd(SanPhamDTO sp, File selectedFile) {
+        // 1. Validate dữ liệu cơ bản
+        if (sp.getTenSP() == null || sp.getTenSP().trim().isEmpty()) return "Tên sản phẩm không được để trống!";
+        if (sp.getMaTL() == null || sp.getMaTL().isEmpty()) return "Vui lòng chọn Thể loại!";
+        if (sp.getMaTG() == null || sp.getMaTG().isEmpty()) return "Vui lòng chọn Tác giả!";
+        if (sp.getMaNXB() == null || sp.getMaNXB().isEmpty()) return "Vui lòng chọn Nhà xuất bản!";
+        if (sp.getNamXuatBan() <= 0 || sp.getNamXuatBan() > Year.now().getValue()) return "Năm xuất bản không hợp lệ!";
+
+        // 2. Ép buộc tạo mã mới từ hệ thống
+        sp.setMaSP(generateNewMaSP());
+        sp.setTrangThai(true); // Mặc định là đang kinh doanh
+        
+        // Giá và số lượng mặc định là 0 khi mới tạo (sẽ cập nhật qua phiếu nhập)
+        sp.setSoLuongTon(0);
+        sp.setDonGia(0);
+        sp.setDonViTinh("Cuốn");
+        // 3. Xử lý lưu ảnh
+        if (selectedFile != null) {
+            String newImageName = saveImage(selectedFile);
+            sp.setHinhAnh(newImageName);
+        } else {
+            sp.setHinhAnh(""); 
+        }
+
+        if (spDAO.insert(sp)) {
+            refreshData();
+            return "SUCCESS";
+        }
+        return "Lỗi hệ thống: Không thể thêm sản phẩm!";
+    }
+
+    /**
+     * Logic Sửa: Giữ nguyên mã, cập nhật thông tin và ảnh mới nếu có
+     */
+    public String validateAndUpdate(SanPhamDTO sp, File selectedFile) {
+        if (sp.getTenSP() == null || sp.getTenSP().trim().isEmpty()) return "Tên sản phẩm không được để trống!";
+
+        // Nếu có chọn file ảnh mới thì mới lưu, không thì giữ tên ảnh cũ đã có trong DTO
+        if (selectedFile != null) {
+            String newImageName = saveImage(selectedFile);
+            sp.setHinhAnh(newImageName);
+        }
+
+        if (spDAO.update(sp)) {
+            refreshData();
+            return "SUCCESS";
+        }
+        return "Lỗi hệ thống: Không thể cập nhật sản phẩm!";
+    }
+
+    /**
+     * Xử lý lưu file ảnh vào thư mục resources của dự án
+     */
+    private String saveImage(File sourceFile) {
+        if (sourceFile == null) return "";
+        try {
+            String fileName = System.currentTimeMillis() + "_" + sourceFile.getName(); 
+            File destFile = new File("src/main/resources/images/product/" + fileName);
+            destFile.getParentFile().mkdirs();
+            Files.copy(sourceFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            return fileName;
+        } catch (Exception e) {
+            System.err.println("❌ Lỗi lưu file ảnh: " + e.getMessage());
+            return "";
+        }
+    }
+
+    public String generateNewMaSP() {
+        String maxMa = spDAO.getMaxMaSP();
+        if (maxMa == null || maxMa.isEmpty() || !maxMa.startsWith("SP")) {
+            return "SP001";
+        }
+        int num = Integer.parseInt(maxMa.substring(2)) + 1;
+        return String.format("SP%03d", num);
+    }
+
+    public ArrayList<SanPhamDTO> search(String keyword) {
+        return spDAO.search(keyword); 
+    }
+    
+    public SanPhamDTO getById(String maSP) {
+        for (SanPhamDTO sp : listSP) {
+            if (sp.getMaSP().equalsIgnoreCase(maSP)) return sp;
+        }
+        return null;
+    }
+
+    public ArrayList<SanPhamDTO> searchAdvanced(String maTG, String maTL, int maxSoLuong, long maxGia) {
+        return spDAO.searchAdvanced(maTG, maTL, maxSoLuong, maxGia);
+    }
+
 }

@@ -21,20 +21,37 @@ public class TheLoaiBUS {
         return listTL;
     }
 
-    public boolean addTheLoai(TheLoaiDTO tl) {
+    /**
+     * Thêm Thể Loại: Tự động gán mã TLxxx
+     */
+    public String validateAndAdd(TheLoaiDTO tl) {
+        if (tl.getTenTL() == null || tl.getTenTL().trim().isEmpty()) {
+            return "Tên thể loại không được để trống!";
+        }
+
+        // Ép buộc tạo mã mới từ hệ thống
+        tl.setMaTL(generateNewMaTL());
+
         if (tlDAO.insert(tl)) {
             refreshData();
-            return true;
+            return "SUCCESS";
         }
-        return false;
+        return "Lỗi hệ thống: Không thể thêm thể loại!";
     }
 
-    public boolean updateTheLoai(TheLoaiDTO tl) {
+    /**
+     * Cập nhật Thể Loại
+     */
+    public String validateAndUpdate(TheLoaiDTO tl) {
+        if (tl.getTenTL() == null || tl.getTenTL().trim().isEmpty()) {
+            return "Tên thể loại không được để trống!";
+        }
+
         if (tlDAO.update(tl)) {
             refreshData();
-            return true;
+            return "SUCCESS";
         }
-        return false;
+        return "Lỗi hệ thống: Không thể cập nhật thông tin!";
     }
 
     public boolean deleteTheLoai(String maTL) {
@@ -45,10 +62,29 @@ public class TheLoaiBUS {
         return false;
     }
 
-    // Hàm tìm kiếm: Lọc danh sách theo Mã hoặc Tên thể loại (Không phân biệt hoa thường)
+    /**
+     * Sinh mã TL001, TL002... 
+     * Cắt từ vị trí thứ 2 (sau chữ "TL")
+     */
+    public String generateNewMaTL() {
+        if (listTL == null || listTL.isEmpty()) return "TL001";
+        
+        int max = 0;
+        for (TheLoaiDTO tl : listTL) {
+            String ma = tl.getMaTL();
+            if (ma != null && ma.startsWith("TL")) {
+                try {
+                    int num = Integer.parseInt(ma.substring(2));
+                    if (num > max) max = num;
+                } catch (NumberFormatException e) {}
+            }
+        }
+        return String.format("TL%03d", max + 1);
+    }
+
     public ArrayList<TheLoaiDTO> search(String keyword) {
         ArrayList<TheLoaiDTO> result = new ArrayList<>();
-        String key = keyword.toLowerCase(); // Chuyển từ khóa về chữ thường để so sánh
+        String key = keyword.toLowerCase().trim();
         for (TheLoaiDTO tl : listTL) {
             if (tl.getMaTL().toLowerCase().contains(key) || 
                 tl.getTenTL().toLowerCase().contains(key)) {
@@ -58,24 +94,16 @@ public class TheLoaiBUS {
         return result;
     }
 
-    // Tự động tạo mã thể loại mới (Định dạng TL001, TL002...)
-    public String generateNewMaTL() {
-        if (listTL.isEmpty()) return "TL001"; 
-        int max = 0;
+    public TheLoaiDTO getById(String id) {
         for (TheLoaiDTO tl : listTL) {
-            try {
-                int num = Integer.parseInt(tl.getMaTL().substring(2));
-                if (num > max) max = num;
-            } catch (Exception e) {}
+            if (tl.getMaTL().equalsIgnoreCase(id)) return tl;
         }
-        return String.format("TL%03d", max + 1);
+        return null;
     }
 
     public String getTenById(String id) {
-        for (TheLoaiDTO tl : listTL) {
-            if (tl.getMaTL().equals(id)) return tl.getTenTL();
-        }
-        return "Chưa xác định";
+        TheLoaiDTO tl = getById(id);
+        return (tl != null) ? tl.getTenTL() : "Chưa xác định";
     }
 
     public String getMaByTen(String ten) {

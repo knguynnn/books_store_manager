@@ -2,6 +2,7 @@ package Backend.DTO.SanPham_DanhMuc;
 
 public class SanPhamDTO {
     private String maSP;
+    private String hinhAnh;
     private String tenSP;
     private String maTG; 
     private String maTL; 
@@ -10,16 +11,17 @@ public class SanPhamDTO {
     private long donGia;
     private int namXuatBan;
     private String maNXB;
-    private String maNCC;
     private String moTa;
     private boolean trangThai;
 
     public SanPhamDTO() {}
 
-    public SanPhamDTO(String maSP, String tenSP, String maTG, String maTL, int soLuongTon, 
+    // Cập nhật Constructor đầy đủ tham số
+    public SanPhamDTO(String maSP, String hinhAnh, String tenSP, String maTG, String maTL, int soLuongTon, 
                       String donViTinh, long donGia, int namXuatBan, String maNXB, 
-                      String maNCC, String moTa, boolean trangThai) {
+                      String moTa, boolean trangThai) {
         this.maSP = maSP;
+        this.hinhAnh = hinhAnh; 
         this.tenSP = tenSP;
         this.maTG = maTG;
         this.maTL = maTL;
@@ -28,12 +30,15 @@ public class SanPhamDTO {
         this.donGia = donGia;
         this.namXuatBan = namXuatBan;
         this.maNXB = maNXB;
-        this.maNCC = maNCC;
         this.moTa = moTa;
         this.trangThai = trangThai;
     }
 
-    // Getters và Setters
+    // --- Getters và Setters cho thuộc tính mới ---
+    public String getHinhAnh() { return hinhAnh; }
+    public void setHinhAnh(String hinhAnh) { this.hinhAnh = hinhAnh; }
+
+    // --- Các Getters và Setters cũ ---
     public String getMaSP() { return maSP; }
     public void setMaSP(String maSP) { this.maSP = maSP; }
 
@@ -60,9 +65,6 @@ public class SanPhamDTO {
 
     public String getMaNXB() { return maNXB; }
     public void setMaNXB(String maNXB) { this.maNXB = maNXB; }
-
-    public String getMaNCC() { return maNCC; }
-    public void setMaNCC(String maNCC) { this.maNCC = maNCC; }
 
     public String getMoTa() { return moTa; }
     public void setMoTa(String moTa) { this.moTa = moTa; }

@@ -26,7 +26,6 @@ public class TacGiaDAO {
             }
         } catch (SQLException e) {
             System.out.println("❌ Lỗi truy vấn getAll tác giả: " + e.getMessage());
-            e.printStackTrace();
         }
         return list;
     }
@@ -67,27 +66,25 @@ public class TacGiaDAO {
         }
     }
 
+    // 4. Xóa tác giả 
     public boolean delete(String maTG) {
-        boolean result = false;
-        // Đồng bộ hóa bản chất xóa mềm
-        String sql = "UPDATE tacgia SET TrangThai = 0 WHERE MaTG = ?";
+        String sql = "DELETE FROM tacgia WHERE MaTG = ?";
         try (Connection conn = DatabaseHelper.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setString(1, maTG);
-            if (ps.executeUpdate() > 0) {
-                result = true;
-            }
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.out.println("Lỗi xóa tác giả: " + e.getMessage());
+            // Lỗi này thường xảy ra nếu Tác giả đã có sách trong bảng sanpham (Ràng buộc khóa ngoại)
+            System.out.println("❌ Lỗi xóa tác giả (Có thể do đang được liên kết với sản phẩm): " + e.getMessage());
+            return false;
         }
-        return result;
     }
 
     // 5. Tìm kiếm tác giả theo tên hoặc mã
     public ArrayList<TacGiaDTO> search(String keyword) {
         ArrayList<TacGiaDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM tacgia WHERE MaTG LIKE ? OR TenTG LIKE ? OR HoTG LIKE ?";
+        String sql = "SELECT * FROM tacgia WHERE MaTG LIKE ? OR CONCAT(HoTG,' ',TenTG) LIKE ?";
 
         try (Connection conn = DatabaseHelper.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -95,7 +92,6 @@ public class TacGiaDAO {
             String key = "%" + keyword + "%";
             ps.setString(1, key);
             ps.setString(2, key);
-            ps.setString(3, key);
             
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
