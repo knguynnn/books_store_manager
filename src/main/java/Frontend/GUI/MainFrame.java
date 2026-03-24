@@ -17,7 +17,9 @@ import Frontend.GUI.NhapHangGUI.NhapHangPanel;
 import Frontend.GUI.PhanQuyenGUI.PhanQuyenPanel;
 import Frontend.GUI.SanPhamGUI.SanPhamPanel;
 import Frontend.GUI.ThongKeGUI.ThongKePanel;
-import Frontend.GUI.TrangChuGUI.TrangChuPanel;
+import Frontend.GUI.PhanQuyenGUI.PhanQuyenPanel;
+import Frontend.GUI.NhaCungCapGUI.NhaCungCapPanel;
+
 
 public class MainFrame extends JFrame {
     private CardLayout rootLayout;
@@ -110,6 +112,20 @@ public class MainFrame extends JFrame {
         contentArea.add(new ThongKePanel(), "Thống kê");
         contentArea.add(new PhanQuyenPanel(), "Phân quyền");
 
+        // ... phía sau các trang Khách hàng, Nhân viên ...
+        contentArea.add(new NhaCungCapPanel(), "Nhà cung cấp"); // Đăng ký panel thật
+        
+        // 2. Đăng ký các trang khác dưới dạng Placeholder
+        String[] pages = {"Bán hàng", "Nhập hàng"};
+        for (String page : pages) {
+            JPanel pnlPlaceholder = new JPanel(new GridBagLayout());
+            pnlPlaceholder.setBackground(Theme.BACKGROUND);
+            JLabel lbl = new JLabel("GIAO DIỆN TRANG: " + page.toUpperCase());
+            lbl.setFont(new Font("Segoe UI", Font.ITALIC, 20));
+            pnlPlaceholder.add(lbl);
+            contentArea.add(pnlPlaceholder, page);
+        }
+        
         pnlRight.add(contentArea, BorderLayout.CENTER);
         pnlApp.add(pnlRight, BorderLayout.CENTER);
 

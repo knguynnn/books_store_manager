@@ -1,13 +1,12 @@
 package Backend.BUS.NCC_NhapHang;
 
-import java.util.ArrayList;
-
 import Backend.DAO.NCC_NhapHang.NhaCungCapDAO;
 import Backend.DTO.NCC_NhapHang.NhaCungCapDTO;
+import java.util.ArrayList;
 
 public class NhaCungCapBUS {
-    private ArrayList<NhaCungCapDTO> listNCC;
     private NhaCungCapDAO dao = new NhaCungCapDAO();
+    private ArrayList<NhaCungCapDTO> listNCC;
 
     public NhaCungCapBUS() {
         refreshData();
@@ -21,73 +20,65 @@ public class NhaCungCapBUS {
         return listNCC;
     }
 
-    public String generateNewMaNCC() {
-        if (listNCC == null || listNCC.isEmpty()) {
-            return "NCC001";
-        }
-        int maxNumber = 0;
+    public NhaCungCapDTO getNCCByID(String maNCC) {
         for (NhaCungCapDTO ncc : listNCC) {
-            String ma = ncc.getMaNCC();
-            if (ma.startsWith("NCC")) {
-                try {
-                    int number = Integer.parseInt(ma.substring(3));
-                    if (number > maxNumber) {
-                        maxNumber = number;
-                    }
-                } catch (NumberFormatException e) {
-                    // bỏ qua
+            if (ncc.getMaNCC().equals(maNCC)) return ncc;
+        }
+        return null;
+    }
+
+    public boolean addNCC(NhaCungCapDTO ncc) {
+        if (dao.insert(ncc)) {
+            listNCC.add(ncc);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean updateNCC(NhaCungCapDTO ncc) {
+        if (dao.update(ncc)) {
+            for (int i = 0; i < listNCC.size(); i++) {
+                if (listNCC.get(i).getMaNCC().equals(ncc.getMaNCC())) {
+                    listNCC.set(i, ncc);
+                    break;
                 }
             }
+            return true;
         }
-        return String.format("NCC%03d", maxNumber + 1);
+        return false;
+    }
+
+    public boolean deleteNCC(String maNCC) {
+        if (dao.delete(maNCC)) {
+            listNCC.removeIf(ncc -> ncc.getMaNCC().equals(maNCC));
+            return true;
+        }
+        return false;
     }
 
     public ArrayList<NhaCungCapDTO> search(String keyword) {
         ArrayList<NhaCungCapDTO> result = new ArrayList<>();
-        String kw = keyword.toLowerCase();
+        keyword = keyword.toLowerCase();
         for (NhaCungCapDTO ncc : listNCC) {
-            if (ncc.getMaNCC().toLowerCase().contains(kw) ||
-                ncc.getTenNCC().toLowerCase().contains(kw) ||
-                (ncc.getSoDienThoai() != null && ncc.getSoDienThoai().contains(keyword))) {
+            if (ncc.getMaNCC().toLowerCase().contains(keyword) || 
+                ncc.getTenNCC().toLowerCase().contains(keyword) ||
+                ncc.getSdt().contains(keyword)) {
                 result.add(ncc);
             }
         }
         return result;
     }
 
-    public boolean addNhaCungCap(NhaCungCapDTO ncc) {
-        boolean result = dao.insert(ncc);
-        if (result) refreshData();
-        return result;
-    }
-
-    public boolean updateNhaCungCap(NhaCungCapDTO ncc) {
-        boolean result = dao.update(ncc);
-        if (result) refreshData();
-        return result;
-    }
-
-    public boolean deleteNhaCungCap(String maNCC) {
-        boolean result = dao.delete(maNCC);
-        if (result) refreshData();
-        return result;
-    }
-
-    public boolean isMaNCCExist(String maNCC) {
+    public String generateNewMaNCC() {
+        int maxId = 0;
         for (NhaCungCapDTO ncc : listNCC) {
-            if (ncc.getMaNCC().equals(maNCC)) {
-                return true;
+            if (ncc.getMaNCC().matches("^NCC\\d+$")) {
+                try {
+                    int id = Integer.parseInt(ncc.getMaNCC().replace("NCC", ""));
+                    if (id > maxId) maxId = id;
+                } catch (NumberFormatException e) { }
             }
         }
-        return false;
-    }
-
-    public NhaCungCapDTO getById(String maNCC) {
-        for (NhaCungCapDTO ncc : listNCC) {
-            if (ncc.getMaNCC().equals(maNCC)) {
-                return ncc;
-            }
-        }
-        return null;
+        return "NCC" + String.format("%03d", maxId + 1);
     }
 }
