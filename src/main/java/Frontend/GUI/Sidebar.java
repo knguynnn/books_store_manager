@@ -3,6 +3,7 @@ package Frontend.GUI;
 import Frontend.Compoent.Theme;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import Backend.DTO.NhanVien_TaiKhoan.PhanQuyenDTO;
+import Backend.BUS.SharedData; // Import lớp SharedData
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
@@ -56,7 +57,7 @@ public class Sidebar extends JPanel {
         }
         this.add(pnlMenu, BorderLayout.CENTER);
 
-        // --- NÚT ĐĂNG XUẤT (GIỮ NGUYÊN) ---
+        // --- NÚT ĐĂNG XUẤT ---
         JPanel pnlBottom = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 20));
         pnlBottom.setOpaque(false);
         JButton btnLogout = new JButton(" Đăng xuất") {
@@ -65,7 +66,7 @@ public class Sidebar extends JPanel {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(getModel().isPressed() ? Theme.DANGER_COLOR.darker() : (getModel().isRollover() ? new Color(220, 38, 38) : Theme.DANGER_COLOR));
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15); // Bo góc 15px
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
                 g2.dispose();
                 super.paintComponent(g);
             }
@@ -78,7 +79,23 @@ public class Sidebar extends JPanel {
         btnLogout.setBorderPainted(false);
         btnLogout.setContentAreaFilled(false);
         btnLogout.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnLogout.addActionListener(e -> System.exit(0));
+        
+        // CẬP NHẬT LOGIC ĐĂNG XUẤT SỬA LỖI setNhanVien/setPhanQuyen
+        btnLogout.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(null, "Bạn có chắc chắn muốn đăng xuất?", "Xác nhận", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                // Sử dụng phương thức logOut() có sẵn trong SharedData
+                SharedData.logOut(); 
+                
+                // Đóng màn hình chính hiện tại
+                mainFrame.dispose(); 
+                
+                // Mở lại màn hình đăng nhập
+                SwingUtilities.invokeLater(() -> {
+                    new LoginGUI().setVisible(true);
+                });
+            }
+        });
 
         pnlBottom.add(btnLogout);
         this.add(pnlBottom, BorderLayout.SOUTH);
@@ -90,33 +107,26 @@ public class Sidebar extends JPanel {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                
-                // Nếu nút đang được chọn (isOpaque = true), vẽ màu vàng Theme.ACCENT
                 if (isOpaque()) {
-                    g2.setColor(getBackground()); // Lấy màu từ setBackground(Theme.ACCENT)
+                    g2.setColor(getBackground());
                     g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
-                } 
-                // Hiệu ứng hover (tùy chọn): vẽ màu nhẹ khi di chuột vào nút chưa chọn
-                else if (getModel().isRollover()) {
+                } else if (getModel().isRollover()) {
                     g2.setColor(new Color(255, 255, 255, 30)); 
                     g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
                 }
-                
                 g2.dispose();
                 super.paintComponent(g);
             }
         };
-        
         try { btn.setIcon(new FlatSVGIcon("images/icon/" + iconName, 20, 20)); } catch (Exception e) {}
-        
         btn.setPreferredSize(new Dimension(230, 45));
         btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btn.setForeground(Color.WHITE);
-        btn.setBackground(Theme.PRIMARY); // Mặc định nền tối
+        btn.setBackground(Theme.PRIMARY);
         btn.setBorderPainted(false);
         btn.setFocusPainted(false);
-        btn.setContentAreaFilled(false); // Tắt nền mặc định để tự vẽ bo góc
-        btn.setOpaque(false);            // Mặc định là false (chưa chọn)
+        btn.setContentAreaFilled(false);
+        btn.setOpaque(false);
         btn.setHorizontalAlignment(SwingConstants.LEFT);
         btn.setMargin(new Insets(0, 20, 0, 0));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));

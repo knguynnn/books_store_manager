@@ -134,6 +134,15 @@ public class HoaDonDAO {
         return false;
     }
 
+    // Xóa hóa đơn trong transaction
+    public boolean delete(String maHD, Connection conn) throws SQLException {
+        String sql = "DELETE FROM hoadon WHERE MaHD = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maHD);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
     // Sinh mã hóa đơn tự động: HD001, HD002...
     public String generateId() {
         String sql = "SELECT MaHD FROM hoadon ORDER BY MaHD DESC LIMIT 1";
