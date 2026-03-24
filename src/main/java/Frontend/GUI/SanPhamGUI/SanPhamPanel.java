@@ -1,6 +1,7 @@
 package Frontend.GUI.SanPhamGUI;
 
 import Backend.BUS.SanPham_DanhMuc.*;
+import Backend.BUS.NCC_NhapHang.CTPhieuNhapHangBUS;
 import Backend.DTO.SanPham_DanhMuc.*;
 import Frontend.Compoent.*;
 import javax.swing.*;
@@ -22,6 +23,7 @@ public class SanPhamPanel extends JPanel {
     private TacGiaBUS tgBUS = new TacGiaBUS();
     private TheLoaiBUS tlBUS = new TheLoaiBUS();
     private NhaXuatBanBUS nxbBUS = new NhaXuatBanBUS();
+    private CTPhieuNhapHangBUS ctNhapBUS = new CTPhieuNhapHangBUS();
 
     private JTable table;
     private DefaultTableModel model;
@@ -39,11 +41,18 @@ public class SanPhamPanel extends JPanel {
     private JComboBox<String> cbMaTL, cbMaTG, cbMaNXB, cbNamXB;
     private JButton btnAddTL, btnAddTG, btnAddNXB;
 
-    private JLabel lbMa, lbTen, lbMoTa, lbNamXB, lbMaTL, lbMaTG, lbMaNXB, lbGia, lbSoLuong;
+    private JLabel lbMa, lbTen, lbMoTa, lbNamXB, lbMaTL, lbMaTG, lbMaNXB, lbGia, lbGiaBan, lbSoLuong;
     private JLabel lbSDT, lbDiaChi, lbEmail;
 
     private JPanel pnlGiaGroup;
     private JLabel lbHinhAnh;
+
+    // --- Giá nhập + lợi nhuận + giá bán ---
+    private JTextField txtGiaNhap;  // readonly, lấy từ phiếu nhập mới nhất
+    private JComboBox<String> cbLoiNhuan; // % lợi nhuận
+    private JTextField txtGiaBan;   // readonly, = giaNhap * (1 + %)
+    private JPanel pnlGiaNhapGroup;
+    private JPanel pnlGiaBanGroup;
 
     private ButtonAdd btnAdd;
     private ButtonFix btnUpdate;
@@ -57,6 +66,13 @@ public class SanPhamPanel extends JPanel {
         initEvent();
         refreshComboBoxData();
         switchMode("Sản phẩm");
+        Backend.BUS.EventBus.subscribe(eventName -> {
+            if (eventName.equals("SAN_PHAM_CHANGED")) {
+                // ✅ refreshTable() gọi spBUS.refreshData() rồi reload bảng
+                // ✅ invokeLater đảm bảo cập nhật UI trên đúng Swing EDT thread
+                SwingUtilities.invokeLater(() -> refreshTable());
+            }
+        });
     }
 
     private void initComponents() {
@@ -121,13 +137,54 @@ public class SanPhamPanel extends JPanel {
         cbNamXB.addItem("-- Chọn năm --");
         for (int i = currentYear; i >= currentYear - 100; i--) cbNamXB.addItem(String.valueOf(i));
 
-        pnlGiaGroup = new JPanel(new BorderLayout(5, 0));
-        pnlGiaGroup.setOpaque(false);
-        txtGia = createStyledField(); txtGia.setEditable(false); txtGia.setBackground(new Color(240, 240, 240));
+        // ---- Giá nhập (readonly, lấy từ phiếu nhập mới nhất) ----
+        pnlGiaNhapGroup = new JPanel(new BorderLayout(5, 0));
+        pnlGiaNhapGroup.setOpaque(false);
+        txtGiaNhap = createStyledField();
+        txtGiaNhap.setEditable(false);
+        txtGiaNhap.setBackground(new Color(240, 240, 240));
+        txtGiaNhap.setText("0");
+
+        txtGiaNhap.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { tinhGiaBan(); }
+            @Override public void removeUpdate(DocumentEvent e) { tinhGiaBan(); }
+            @Override public void changedUpdate(DocumentEvent e) { tinhGiaBan(); }
+        });
+
+        // Combo % lợi nhuận: 10%, 15%, 20%, 25%, 30%, 40%, 50%
+        cbLoiNhuan = new JComboBox<>(new String[]{"10%", "15%", "20%", "25%", "30%", "40%", "50%"});
+        cbLoiNhuan.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        cbLoiNhuan.setPreferredSize(new Dimension(70, 30));
+        cbLoiNhuan.setToolTipText("Chọn % lợi nhuận để tính giá bán");
+        JLabel lbLoiNhuan = new JLabel("  +Lợi Nhuận:");
+        lbLoiNhuan.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lbLoiNhuan.setForeground(new Color(0, 120, 60));
+        JPanel pnlLoiNhuan = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
+        pnlLoiNhuan.setOpaque(false);
+        pnlLoiNhuan.add(lbLoiNhuan);
+        pnlLoiNhuan.add(cbLoiNhuan);
+        pnlGiaNhapGroup.add(txtGiaNhap, BorderLayout.CENTER);
+        pnlGiaNhapGroup.add(pnlLoiNhuan, BorderLayout.EAST);
+
+        // ---- Giá bán (readonly, tự tính) ----
+        pnlGiaBanGroup = new JPanel(new BorderLayout(5, 0));
+        pnlGiaBanGroup.setOpaque(false);
+        txtGiaBan = createStyledField();
+        txtGiaBan.setEditable(false);
+        txtGiaBan.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        txtGiaBan.setForeground(new Color(180, 0, 0));
+        txtGiaBan.setBackground(new Color(255, 245, 245));
+        txtGiaBan.setText("0");
         JLabel lbDVT_Fixed = new JLabel("/ Cuốn");
         lbDVT_Fixed.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        pnlGiaGroup.add(txtGia, BorderLayout.CENTER);
-        pnlGiaGroup.add(lbDVT_Fixed, BorderLayout.EAST);
+        pnlGiaBanGroup.add(txtGiaBan, BorderLayout.CENTER);
+        pnlGiaBanGroup.add(lbDVT_Fixed, BorderLayout.EAST);
+
+        // Giữ pnlGiaGroup trỏ vào pnlGiaBanGroup để tương thích code cũ (setVisible, v.v.)
+        pnlGiaGroup = pnlGiaBanGroup;
+
+        // txtGia vẫn tồn tại nhưng đồng bộ với txtGiaBan (không hiển thị trực tiếp)
+        txtGia = txtGiaBan;
 
         lbMa = createStyledLabel("Mã:");
         lbTen = createStyledLabel("Tên:");
@@ -136,7 +193,6 @@ public class SanPhamPanel extends JPanel {
         lbMaTL = createStyledLabel("Thể loại:");
         lbMaTG = createStyledLabel("Tác giả:");
         lbMaNXB = createStyledLabel("Nhà XB:");
-        lbGia = createStyledLabel("Giá bán:");
         lbSoLuong = createStyledLabel("Số lượng:");
         lbSDT = createStyledLabel("SĐT:");
         lbDiaChi = createStyledLabel("Địa chỉ:");
@@ -147,8 +203,11 @@ public class SanPhamPanel extends JPanel {
         setupFullRow(row++, lbTen, txtTen);
         setupFullRow(row++, lbMoTa, txtMoTa);
         setupDualFields(row++, lbMaTG, createComboPanel(cbMaTG, btnAddTG), lbMaNXB, createComboPanel(cbMaNXB, btnAddNXB));
-        setupDualFields(row++, lbGia, pnlGiaGroup, lbNamXB, cbNamXB);
-        setupFullRow(row++, lbSoLuong, txtSoLuong);
+        setupDualFields(row++, lbSoLuong, txtSoLuong, lbNamXB, cbNamXB);
+        lbGia = createStyledLabel("Giá nhập:");
+        setupFullRow(row++, lbGia, pnlGiaNhapGroup);
+        lbGiaBan = createStyledLabel("Giá bán:");
+        setupFullRow(row++, lbGiaBan, pnlGiaBanGroup);
         setupFullRow(row++, lbSDT, txtSDT);
         setupFullRow(row++, lbDiaChi, txtDiaChi);
         setupFullRow(row++, lbEmail, txtEmail);
@@ -296,7 +355,8 @@ public class SanPhamPanel extends JPanel {
         lbMaTL.setVisible(visible); cbMaTL.getParent().setVisible(visible);
         lbMaTG.setVisible(visible); cbMaTG.getParent().setVisible(visible);
         lbMaNXB.setVisible(visible); cbMaNXB.getParent().setVisible(visible);
-        lbGia.setVisible(visible); pnlGiaGroup.setVisible(visible);
+        lbGia.setVisible(visible); pnlGiaNhapGroup.setVisible(visible);
+        lbGiaBan.setVisible(visible); pnlGiaBanGroup.setVisible(visible);
         lbSoLuong.setVisible(visible); txtSoLuong.setVisible(visible);
         lbSDT.setVisible(visible); txtSDT.setVisible(visible);
         lbDiaChi.setVisible(visible); txtDiaChi.setVisible(visible);
@@ -327,6 +387,9 @@ public class SanPhamPanel extends JPanel {
 
         btnChonAnh.addActionListener(e -> chonHinhAnh());
         btnReset.addActionListener(e -> resetForm());
+
+        // Khi chọn % lợi nhuận → tự tính lại giá bán
+        cbLoiNhuan.addActionListener(e -> tinhGiaBan());
 
         btnAdd.addActionListener(e -> themDuLieu());
         btnUpdate.addActionListener(e -> suaDuLieu());
@@ -383,7 +446,8 @@ public class SanPhamPanel extends JPanel {
                 lbMaTG.setVisible(true); cbMaTG.getParent().setVisible(true);
                 lbMaNXB.setVisible(true); cbMaNXB.getParent().setVisible(true);
                 lbNamXB.setVisible(true); cbNamXB.setVisible(true);
-                lbGia.setVisible(true); pnlGiaGroup.setVisible(true);
+                lbGia.setVisible(true); pnlGiaNhapGroup.setVisible(true);  // Giá nhập + combo %LN
+                lbGiaBan.setVisible(true); pnlGiaBanGroup.setVisible(true); // Giá bán
                 lbSoLuong.setVisible(true); txtSoLuong.setVisible(true);
                 break;
             case "Tác giả":
@@ -411,7 +475,7 @@ public class SanPhamPanel extends JPanel {
 
     private void resetForm() {
         txtMa.setText(""); txtTen.setText(""); txtMoTa.setText("");
-        txtSoLuong.setText("0"); txtGia.setText("0");
+        txtSoLuong.setText("0"); txtGiaNhap.setText("0"); txtGiaBan.setText("0");
         txtSDT.setText(""); txtDiaChi.setText(""); txtEmail.setText("");
         if (cbNamXB.getItemCount() > 0) cbNamXB.setSelectedIndex(0);
         if (cbMaTL.getItemCount() > 0) cbMaTL.setSelectedIndex(0);
@@ -438,8 +502,11 @@ public class SanPhamPanel extends JPanel {
                     txtMa.setText(sp.getMaSP()); txtTen.setText(sp.getTenSP()); txtMoTa.setText(sp.getMoTa());
                     cbNamXB.setSelectedItem(String.valueOf(sp.getNamXuatBan()));
                     cbMaTL.setSelectedItem(sp.getMaTL()); cbMaTG.setSelectedItem(sp.getMaTG()); cbMaNXB.setSelectedItem(sp.getMaNXB());
-                    txtGia.setText(String.valueOf(sp.getDonGia())); txtSoLuong.setText(String.valueOf(sp.getSoLuongTon()));
+                    txtSoLuong.setText(String.valueOf(sp.getSoLuongTon()));
                     displayImage(sp.getHinhAnh()); selectedFile = null;
+
+                    // Load giá nhập mới nhất từ BUS, rồi tính giá bán
+                    capNhatGiaNhap(sp.getMaSP(), sp.getDonGia());
                 }
                 break;
             case "Tác giả":
@@ -485,12 +552,34 @@ public class SanPhamPanel extends JPanel {
         switch (mode) {
             case "Sản phẩm":
                 SanPhamDTO sp = new SanPhamDTO();
-                sp.setTenSP(txtTen.getText()); sp.setMoTa(txtMoTa.getText());
-                sp.setMaTL(getSelectedId(cbMaTL)); sp.setMaTG(getSelectedId(cbMaTG)); sp.setMaNXB(getSelectedId(cbMaNXB));
+                sp.setTenSP(txtTen.getText());
+                sp.setMoTa(txtMoTa.getText());
+                sp.setMaTL(getSelectedId(cbMaTL));
+                sp.setMaTG(getSelectedId(cbMaTG));
+                sp.setMaNXB(getSelectedId(cbMaNXB));
+                // Xử lý năm xuất bản
+                String namStr = (String) cbNamXB.getSelectedItem();
+                int nam = 0;
+                if (namStr != null && !namStr.contains("--")) {
+                    try {
+                        nam = Integer.parseInt(namStr);
+                    } catch (NumberFormatException e) {
+                        nam = 0;
+                    }
+                }
+                sp.setNamXuatBan(nam);
+                // Khi thêm mới, giá bán và số lượng sẽ được lấy từ form (nếu có nhập)
                 try {
-                    String nxbStr = (String) cbNamXB.getSelectedItem();
-                    sp.setNamXuatBan(nxbStr.contains("--") ? 0 : Integer.parseInt(nxbStr));
-                } catch (Exception ex) {}
+                    sp.setDonGia(Long.parseLong(txtGiaBan.getText().trim()));
+                } catch (NumberFormatException e) {
+                    sp.setDonGia(0);
+                }
+                try {
+                    sp.setSoLuongTon(Integer.parseInt(txtSoLuong.getText().trim()));
+                } catch (NumberFormatException e) {
+                    sp.setSoLuongTon(0);
+                }
+                sp.setDonViTinh("Cuốn");
                 result = spBUS.validateAndAdd(sp, selectedFile);
                 break;
             case "Tác giả":
@@ -505,8 +594,12 @@ public class SanPhamPanel extends JPanel {
         }
         if (result.equals("SUCCESS")) {
             JOptionPane.showMessageDialog(this, "Thêm thành công!");
-            refreshComboBoxData(); resetForm(); timKiem();
-        } else JOptionPane.showMessageDialog(this, result, "Lỗi", JOptionPane.ERROR_MESSAGE);
+            refreshComboBoxData();
+            resetForm();
+            timKiem();
+        } else {
+            JOptionPane.showMessageDialog(this, result, "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void suaDuLieu() {
@@ -516,16 +609,38 @@ public class SanPhamPanel extends JPanel {
             case "Sản phẩm":
                 SanPhamDTO sp = spBUS.getById(txtMa.getText());
                 if (sp != null) {
-                    sp.setTenSP(txtTen.getText()); sp.setMoTa(txtMoTa.getText());
-                    sp.setMaTL(getSelectedId(cbMaTL)); sp.setMaTG(getSelectedId(cbMaTG)); sp.setMaNXB(getSelectedId(cbMaNXB));
+                    sp.setTenSP(txtTen.getText());
+                    sp.setMoTa(txtMoTa.getText());
+                    sp.setMaTL(getSelectedId(cbMaTL));
+                    sp.setMaTG(getSelectedId(cbMaTG));
+                    sp.setMaNXB(getSelectedId(cbMaNXB));
+                    // Năm xuất bản
+                    String namStr = (String) cbNamXB.getSelectedItem();
+                    int nam = 0;
+                    if (namStr != null && !namStr.contains("--")) {
+                        try {
+                            nam = Integer.parseInt(namStr);
+                        } catch (NumberFormatException e) {
+                            nam = 0;
+                        }
+                    }
+                    sp.setNamXuatBan(nam);
+                    // Lấy giá bán từ txtGiaBan (đã được tính tự động)
                     try {
-                        String nxbStr = (String) cbNamXB.getSelectedItem();
-                        sp.setNamXuatBan(nxbStr.contains("--") ? 0 : Integer.parseInt(nxbStr));
-                        sp.setDonGia(Long.parseLong(txtGia.getText()));
-                        sp.setSoLuongTon(Integer.parseInt(txtSoLuong.getText()));
-                        sp.setDonViTinh("Cuốn");
-                    } catch (Exception ex) {}
+                        sp.setDonGia(Long.parseLong(txtGiaBan.getText().trim()));
+                    } catch (NumberFormatException e) {
+                        sp.setDonGia(0);
+                    }
+                    // Số lượng
+                    try {
+                        sp.setSoLuongTon(Integer.parseInt(txtSoLuong.getText().trim()));
+                    } catch (NumberFormatException e) {
+                        sp.setSoLuongTon(0);
+                    }
+                    sp.setDonViTinh("Cuốn");
                     result = spBUS.validateAndUpdate(sp, selectedFile);
+                } else {
+                    result = "Không tìm thấy sản phẩm để cập nhật!";
                 }
                 break;
             case "Tác giả":
@@ -540,8 +655,11 @@ public class SanPhamPanel extends JPanel {
         }
         if (result.equals("SUCCESS")) {
             JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
-            refreshComboBoxData(); timKiem();
-        } else JOptionPane.showMessageDialog(this, result, "Lỗi", JOptionPane.ERROR_MESSAGE);
+            refreshComboBoxData();
+            timKiem();
+        } else {
+            JOptionPane.showMessageDialog(this, result, "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void xoaDuLieu() {
@@ -579,6 +697,43 @@ public class SanPhamPanel extends JPanel {
             case "Nhà xuất bản": nxbBUS.refreshData(); break;
         }
         timKiem();
+    }
+
+    /**
+     * Lấy giá nhập mới nhất của sản phẩm từ CTPhieuNhapHang, hiển thị vào txtGiaNhap,
+     * sau đó tính ngay giá bán theo % lợi nhuận đang chọn.
+     * @param maSP  mã sản phẩm cần tra
+     * @param donGiaCu  giá bán hiện tại trong DB (fallback nếu chưa có phiếu nhập)
+     */
+    private void capNhatGiaNhap(String maSP, long donGiaCu) {
+        long giaNhap = ctNhapBUS.getLatestGiaNhapBySP(maSP);
+        if (giaNhap > 0) {
+            txtGiaNhap.setText(String.valueOf(giaNhap));
+            txtGiaNhap.setForeground(new Color(0, 100, 0));
+            txtGiaNhap.setToolTipText("Giá nhập từ phiếu nhập hàng gần nhất");
+        } else {
+            // SP chưa có phiếu nhập → hiện giá bán cũ làm tham chiếu
+            txtGiaNhap.setText(donGiaCu > 0 ? String.valueOf(donGiaCu) : "0");
+            txtGiaNhap.setForeground(Color.GRAY);
+            txtGiaNhap.setToolTipText("Chưa có phiếu nhập — đang dùng giá hiện tại làm tham chiếu");
+        }
+        tinhGiaBan();
+    }
+
+    /**
+     * Tính giá bán = giaNhap × (1 + loiNhuan/100), làm tròn đến 100đ.
+     * Kết quả ghi vào txtGiaBan (cũng là txtGia), dùng khi nhấn Sửa để lưu DB.
+     */
+    private void tinhGiaBan() {
+        try {
+            long giaNhap = Long.parseLong(txtGiaNhap.getText().trim());
+            String phanTramStr = cbLoiNhuan.getSelectedItem().toString().replace("%", "").trim();
+            double phanTram = Double.parseDouble(phanTramStr);
+            long giaBan = Math.round(giaNhap * (1 + phanTram / 100.0) / 100.0) * 100; // làm tròn 100đ
+            txtGiaBan.setText(String.valueOf(giaBan));
+        } catch (NumberFormatException ex) {
+            txtGiaBan.setText("0");
+        }
     }
 
     private void chonHinhAnh() {

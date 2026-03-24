@@ -28,6 +28,34 @@ public class CTPhieuNhapHangDAO {
         return list;
     }
 
+    /**
+     * Lấy đơn giá nhập mới nhất của một sản phẩm.
+     * JOIN với phieunhaphang để lấy phiếu có ngày nhập lớn nhất.
+     * Trả về 0 nếu sản phẩm chưa có phiếu nhập nào.
+     */
+    public long getLatestGiaNhapBySP(String maSP) {
+        String sql = """
+                SELECT ct.DonGia
+                FROM ctphieunhaphang ct
+                JOIN phieunhaphang pn ON ct.MaPhieuNhap = pn.MaPhieuNhap
+                WHERE ct.MaSP = ?
+                ORDER BY pn.NgayNhap DESC
+                LIMIT 1
+                """;
+        try (Connection conn = DatabaseHelper.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maSP);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getLong("DonGia");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ Lỗi lấy giá nhập mới nhất: " + e.getMessage());
+        }
+        return 0;
+    }
+
     public boolean insert(CTPhieuNhapHangDTO ct, Connection conn) throws SQLException {
         String sql = "INSERT INTO ctphieunhaphang (MaPhieuNhap, MaSP, SL, DonGia, ThanhTien) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {

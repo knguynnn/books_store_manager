@@ -11,4 +11,12 @@ public class CTPhieuNhapHangBUS {
     public ArrayList<CTPhieuNhapHangDTO> getByMaPhieuNhap(String maPhieuNhap) {
         return dao.getByMaPhieuNhap(maPhieuNhap);
     }
+
+    /**
+     * Trả về đơn giá nhập mới nhất của sản phẩm (từ phiếu nhập gần nhất).
+     * Trả về 0 nếu chưa có phiếu nhập nào.
+     */
+    public long getLatestGiaNhapBySP(String maSP) {
+        return dao.getLatestGiaNhapBySP(maSP);
+    }
 }
