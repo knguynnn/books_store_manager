@@ -3,12 +3,28 @@ package Frontend.GUI.SanPhamGUI;
 import Backend.BUS.SanPham_DanhMuc.*;
 import Backend.DTO.SanPham_DanhMuc.*;
 import Frontend.Compoent.*;
+
+// Import thư viện AWT/Swing (Giữ nguyên cho giao diện)
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.FileOutputStream;
+
+// Import thư viện Apache POI (Chỉ định rõ class để tránh xung đột)
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class SanPhamPanel extends JPanel {
     private SanPhamBUS spBUS = new SanPhamBUS();
@@ -21,11 +37,11 @@ public class SanPhamPanel extends JPanel {
     private JComboBox<String> cbMode;
     private SearchTextField searchField;
     private JButton btnSearch;
+    private JButton btnExport;
 
     private JLabel lbTitle;
     private JPanel pnlFields;
     
-    // Khai báo các JTextField riêng biệt
     private JTextField txtMa, txtTen, txtMoTa, txtNamXB, txtMaTL, txtMaTG, txtMaNXB, txtMaNCC, txtGiaDVT, txtSoLuong;
     private JLabel[] labels = new JLabel[10];
     private JLabel lbTrangThai;
@@ -53,7 +69,7 @@ public class SanPhamPanel extends JPanel {
         pnlLeft.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, new Color(220, 220, 220)));
 
         lbTitle = new JLabel("THÔNG TIN", SwingConstants.CENTER);
-        lbTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        lbTitle.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 22));
         lbTitle.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
         pnlLeft.add(lbTitle, BorderLayout.NORTH);
 
@@ -61,7 +77,6 @@ public class SanPhamPanel extends JPanel {
         pnlFields.setBackground(Color.WHITE);
         pnlFields.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
 
-        // Khởi tạo các JTextField
         txtMa = createStyledField(); txtMa.setEditable(false); txtMa.setBackground(new Color(230, 230, 230));
         txtTen = createStyledField();
         txtMoTa = createStyledField();
@@ -73,7 +88,6 @@ public class SanPhamPanel extends JPanel {
         txtGiaDVT = createStyledField();
         txtSoLuong = createStyledField();
 
-        // Add các field vào panel thông qua hàm helper
         setupField(0, "Mã:", txtMa);
         setupField(1, "Tên:", txtTen);
         setupField(2, "Mô tả:", txtMoTa);
@@ -85,19 +99,18 @@ public class SanPhamPanel extends JPanel {
         setupField(8, "Giá/DVT:", txtGiaDVT);
         setupField(9, "Số lượng:", txtSoLuong);
 
-        // Trạng thái
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(4, 0, 4, 0);
 
         lbTrangThai = new JLabel("Trạng thái:"); 
-        lbTrangThai.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lbTrangThai.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 13));
         gbc.gridx = 0; gbc.gridy = 10; gbc.weightx = 0.3;
-        pnlFields.add(lbTrangThai, gbc); // Add vào panel
+        pnlFields.add(lbTrangThai, gbc);
 
         chkStatus = new JCheckBox("Đang bán");
         chkStatus.setBackground(Color.WHITE);
-        chkStatus.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        chkStatus.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
         gbc.gridx = 1; gbc.weightx = 0.7;
         pnlFields.add(chkStatus, gbc);
 
@@ -125,14 +138,27 @@ public class SanPhamPanel extends JPanel {
         cbMode = new JComboBox<>(new String[]{"Sản phẩm", "Tác giả", "Thể loại", "Nhà xuất bản"});
         cbMode.setPreferredSize(new Dimension(130, 40));
         searchField = new SearchTextField();
+        
+        JPanel pnlRightActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
+        pnlRightActions.setOpaque(false);
+
         btnSearch = new JButton("🔍");
         btnSearch.setBackground(new Color(33, 37, 41));
         btnSearch.setForeground(Color.WHITE);
         btnSearch.setPreferredSize(new Dimension(50, 40));
 
+        btnExport = new JButton("Xuất Excel");
+        btnExport.setBackground(new Color(40, 167, 69));
+        btnExport.setForeground(Color.WHITE);
+        btnExport.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 12));
+        btnExport.setPreferredSize(new Dimension(100, 40));
+
+        pnlRightActions.add(btnSearch);
+        pnlRightActions.add(btnExport);
+
         pnlTool.add(cbMode, BorderLayout.WEST);
         pnlTool.add(searchField, BorderLayout.CENTER);
-        pnlTool.add(btnSearch, BorderLayout.EAST);
+        pnlTool.add(pnlRightActions, BorderLayout.EAST);
         pnlRight.add(pnlTool, BorderLayout.NORTH);
 
         model = new DefaultTableModel() {
@@ -143,7 +169,7 @@ public class SanPhamPanel extends JPanel {
         table.setShowGrid(false);
 
         JTableHeader header = table.getTableHeader();
-        header.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        header.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
         header.setBackground(new Color(33, 37, 41));
         header.setForeground(Color.WHITE);
         header.setPreferredSize(new Dimension(0, 45));
@@ -158,12 +184,10 @@ public class SanPhamPanel extends JPanel {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(4, 0, 4, 0);
-        
         labels[row] = new JLabel(labelText);
-        labels[row].setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        labels[row].setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 13));
         gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.3;
         pnlFields.add(labels[row], gbc);
-
         gbc.gridx = 1; gbc.weightx = 0.7;
         pnlFields.add(field, gbc);
     }
@@ -172,13 +196,74 @@ public class SanPhamPanel extends JPanel {
         JTextField tf = new JTextField();
         tf.setBackground(new Color(248, 249, 250));
         tf.setPreferredSize(new Dimension(0, 30));
-        tf.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        tf.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 13));
         tf.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(220, 220, 220)),
             BorderFactory.createEmptyBorder(0, 10, 0, 10)
         ));
         return tf;
     }
+
+    private void exportToExcel() {
+        if (table.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "Không có dữ liệu để xuất!");
+            return;
+        }
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Chọn nơi lưu file Excel");
+        fileChooser.setSelectedFile(new File("DanhSach_" + cbMode.getSelectedItem().toString() + ".xlsx"));
+
+        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            String filePath = fileChooser.getSelectedFile().getAbsolutePath();
+            if (!filePath.endsWith(".xlsx")) filePath += ".xlsx";
+
+            try (Workbook workbook = new XSSFWorkbook()) {
+                Sheet sheet = workbook.createSheet("Data");
+
+                // Header Style - Chỉ định rõ org.apache.poi.ss.usermodel.Font
+                CellStyle headerStyle = workbook.createCellStyle();
+                headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+                headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+                headerStyle.setBorderBottom(BorderStyle.THIN);
+                headerStyle.setAlignment(HorizontalAlignment.CENTER);
+
+                org.apache.poi.ss.usermodel.Font excelFont = workbook.createFont();
+                excelFont.setBold(true);
+                headerStyle.setFont(excelFont);
+
+                // Tạo Header Row
+                Row headerRow = sheet.createRow(0);
+                for (int i = 0; i < table.getColumnCount(); i++) {
+                    Cell cell = headerRow.createCell(i);
+                    cell.setCellValue(table.getColumnName(i));
+                    cell.setCellStyle(headerStyle);
+                }
+
+                // Đổ dữ liệu
+                for (int i = 0; i < table.getRowCount(); i++) {
+                    Row row = sheet.createRow(i + 1);
+                    for (int j = 0; j < table.getColumnCount(); j++) {
+                        Object val = table.getValueAt(i, j);
+                        row.createCell(j).setCellValue(val != null ? val.toString() : "");
+                    }
+                }
+
+                for (int i = 0; i < table.getColumnCount(); i++) {
+                    sheet.autoSizeColumn(i);
+                }
+
+                try (FileOutputStream out = new FileOutputStream(new File(filePath))) {
+                    workbook.write(out);
+                    JOptionPane.showMessageDialog(this, "Xuất file thành công!");
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi xuất Excel: " + ex.getMessage());
+            }
+        }
+    }
+
+    // --- CÁC HÀM CÒN LẠI GIỮ NGUYÊN ---
 
     private void switchMode(String mode) {
         lbTitle.setText("THÔNG TIN " + mode.toUpperCase());
@@ -187,37 +272,23 @@ public class SanPhamPanel extends JPanel {
 
         if (mode.equals("Sản phẩm")) {
             model.setColumnIdentifiers(new String[]{"Mã SP", "Tên Sản Phẩm", "Tác giả", "Thể loại", "Đơn Giá", "Số lượng"});
-            table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS); // Cho phép tự động co giãn các cột còn lại
-            // Lấy ColumnModel để chỉnh từng cột
-            var columnModel = table.getColumnModel();
-            columnModel.getColumn(0).setPreferredWidth(70);  // Mã SP (Hẹp)
-            columnModel.getColumn(1).setPreferredWidth(150); // Tên Sản Phẩm (Rộng nhất)
-            columnModel.getColumn(2).setPreferredWidth(180); // Tác giả (Rộng vừa)
-            columnModel.getColumn(3).setPreferredWidth(140); // Thể loại
-            columnModel.getColumn(4).setPreferredWidth(100); // Đơn Giá (Vừa)
-            columnModel.getColumn(5).setPreferredWidth(100);  // Số lượng (Hẹp)
-
             updateFormVisibility(new String[]{"Mã SP:", "Tên SP:", "Mô tả:", "Năm XB:", "Mã TL:", "Mã TG:", "Mã NXB:", "Mã NCC:", "Giá/DVT:", "Số lượng:"});
-            lbTrangThai.setVisible(true);
-            chkStatus.setVisible(true);
+            lbTrangThai.setVisible(true); chkStatus.setVisible(true);
             loadDataSanPham();
         } else if (mode.equals("Tác giả")) {
             model.setColumnIdentifiers(new String[]{"Mã TG", "Họ Tác Giả", "Tên Tác Giả"});
             updateFormVisibility(new String[]{"Mã TG:", "Họ TG:", "Tên TG:", "", "", "", "", "", "", ""});
-            lbTrangThai.setVisible(false);
-            chkStatus.setVisible(false);
+            lbTrangThai.setVisible(false); chkStatus.setVisible(false);
             loadDataTacGia();
         } else if (mode.equals("Thể loại")) {
             model.setColumnIdentifiers(new String[]{"Mã TL", "Tên Thể Loại"});
             updateFormVisibility(new String[]{"Mã TL:", "Tên TL:", "", "", "", "", "", "", "", ""});
-            lbTrangThai.setVisible(false);
-            chkStatus.setVisible(false);
+            lbTrangThai.setVisible(false); chkStatus.setVisible(false);
             loadDataTheLoai();
         } else if (mode.equals("Nhà xuất bản")) {
             model.setColumnIdentifiers(new String[]{"Mã NXB", "Tên NXB", "SĐT", "Địa chỉ"});
             updateFormVisibility(new String[]{"Mã NXB:", "Tên NXB:", "SĐT:", "Địa chỉ:", "Email:", "", "", "", "", ""});
-            lbTrangThai.setVisible(false);
-            chkStatus.setVisible(false);
+            lbTrangThai.setVisible(false); chkStatus.setVisible(false);
             loadDataNXB();
         }
     }
@@ -256,37 +327,11 @@ public class SanPhamPanel extends JPanel {
         }
     }
 
-    private void fillForm(int row) {
-        String mode = cbMode.getSelectedItem().toString();
-        String id = model.getValueAt(row, 0).toString();
-
-        if (mode.equals("Sản phẩm")) {
-            SanPhamDTO sp = spBUS.getById(id);
-            if (sp != null) {
-                txtMa.setText(sp.getMaSP()); txtTen.setText(sp.getTenSP()); txtMoTa.setText(sp.getMoTa());
-                txtNamXB.setText(String.valueOf(sp.getNamXuatBan())); txtMaTL.setText(sp.getMaTL());
-                txtMaTG.setText(sp.getMaTG()); txtMaNXB.setText(sp.getMaNXB()); txtMaNCC.setText(sp.getMaNCC());
-                txtGiaDVT.setText(sp.getDonGia() + " / " + sp.getDonViTinh()); txtSoLuong.setText(String.valueOf(sp.getSoLuongTon()));
-                chkStatus.setSelected(sp.isTrangThai());
-            }
-        } else if (mode.equals("Nhà xuất bản")) {
-            for(NhaXuatBanDTO nxb : nxbBUS.getAll()) {
-                if(nxb.getMaNXB().equals(id)) {
-                    txtMa.setText(nxb.getMaNXB()); txtTen.setText(nxb.getTenNXB());
-                    txtMoTa.setText(nxb.getSoDienThoai()); txtNamXB.setText(nxb.getDiaChi());
-                    txtMaTL.setText(nxb.getEmail());
-                    break;
-                }
-            }
-        } else {
-            txtMa.setText(id);
-            txtTen.setText(model.getValueAt(row, 1).toString());
-            if (mode.equals("Tác giả")) txtMoTa.setText(model.getValueAt(row, 2).toString());
-        }
-    }
-
     private void initEvent() {
         cbMode.addActionListener(e -> switchMode(cbMode.getSelectedItem().toString()));
+        btnExport.addActionListener(e -> exportToExcel());
+        btnSearch.addActionListener(e -> JOptionPane.showMessageDialog(this, "Tính năng tìm kiếm sẽ sớm ra mắt!"));
+
         table.addMouseListener(new MouseAdapter() {
             @Override public void mouseClicked(MouseEvent e) {
                 int row = table.getSelectedRow();
@@ -297,7 +342,6 @@ public class SanPhamPanel extends JPanel {
         btnAdd.addActionListener(e -> {
             String mode = cbMode.getSelectedItem().toString();
             if (!validateInput(mode)) return;
-            
             if (mode.equals("Sản phẩm")) {
                 SanPhamDTO sp = getSanPhamFromFields();
                 sp.setMaSP(spBUS.generateNewMaSP());
@@ -317,7 +361,6 @@ public class SanPhamPanel extends JPanel {
             String mode = cbMode.getSelectedItem().toString();
             String id = txtMa.getText();
             if (id.isEmpty()) return;
-
             if (mode.equals("Sản phẩm")) {
                 if (spBUS.updateSanPham(getSanPhamFromFields())) loadDataSanPham();
             } else if (mode.equals("Nhà xuất bản")) {
@@ -333,22 +376,35 @@ public class SanPhamPanel extends JPanel {
             String mode = cbMode.getSelectedItem().toString();
             String id = txtMa.getText();
             if (id.isEmpty()) return;
-
             if (JOptionPane.showConfirmDialog(this, "Xóa " + mode + " " + id + "?", "Xác nhận", 0) == 0) {
                 boolean success = false;
                 if (mode.equals("Sản phẩm")) success = spBUS.deleteSanPham(id);
                 else if (mode.equals("Nhà xuất bản")) success = nxbBUS.deleteNXB(id);
                 else if (mode.equals("Tác giả")) success = tgBUS.deleteTacGia(id);
                 else success = tlBUS.deleteTheLoai(id);
-
-                if (success) {
-                    switchMode(mode);
-                    JOptionPane.showMessageDialog(this, "Xóa thành công!");
-                }
+                if (success) { switchMode(mode); JOptionPane.showMessageDialog(this, "Xóa thành công!"); }
             }
         });
 
         btnReset.addActionListener(e -> resetForm());
+    }
+
+    private void fillForm(int row) {
+        String mode = cbMode.getSelectedItem().toString();
+        String id = model.getValueAt(row, 0).toString();
+        if (mode.equals("Sản phẩm")) {
+            SanPhamDTO sp = spBUS.getById(id);
+            if (sp != null) {
+                txtMa.setText(sp.getMaSP()); txtTen.setText(sp.getTenSP()); txtMoTa.setText(sp.getMoTa());
+                txtNamXB.setText(String.valueOf(sp.getNamXuatBan())); txtMaTL.setText(sp.getMaTL());
+                txtMaTG.setText(sp.getMaTG()); txtMaNXB.setText(sp.getMaNXB()); txtMaNCC.setText(sp.getMaNCC());
+                txtGiaDVT.setText(sp.getDonGia() + " / " + sp.getDonViTinh()); txtSoLuong.setText(String.valueOf(sp.getSoLuongTon()));
+                chkStatus.setSelected(sp.isTrangThai());
+            }
+        } else {
+            txtMa.setText(id);
+            txtTen.setText(model.getValueAt(row, 1).toString());
+        }
     }
 
     private SanPhamDTO getSanPhamFromFields() {
@@ -361,7 +417,7 @@ public class SanPhamPanel extends JPanel {
         if(giaDVT.contains("/")) {
             sp.setDonGia(Long.parseLong(giaDVT.split("/")[0].trim()));
             sp.setDonViTinh(giaDVT.split("/")[1].trim());
-        } else { sp.setDonGia(Long.parseLong(giaDVT.trim())); }
+        } else { sp.setDonGia(Long.parseLong(giaDVT.trim())); sp.setDonViTinh("Cái"); }
         sp.setSoLuongTon(Integer.parseInt(txtSoLuong.getText().trim()));
         sp.setTrangThai(chkStatus.isSelected());
         return sp;
@@ -385,14 +441,10 @@ public class SanPhamPanel extends JPanel {
         txtNamXB.setText(""); txtMaTL.setText(""); txtMaTG.setText("");
         txtMaNXB.setText(""); txtMaNCC.setText(""); txtGiaDVT.setText("");
         txtSoLuong.setText("");
-        
         table.clearSelection();
         chkStatus.setSelected(true);
         String mode = cbMode.getSelectedItem().toString();
-        if(mode.equals("Sản phẩm")) {
-            txtMa.setText(spBUS.generateNewMaSP());
-            chkStatus.setSelected(true);
-        }
+        if(mode.equals("Sản phẩm")) txtMa.setText(spBUS.generateNewMaSP());
         else if(mode.equals("Tác giả")) txtMa.setText(tgBUS.generateNewMaTG());
         else if(mode.equals("Thể loại")) txtMa.setText(tlBUS.generateNewMaTL());
         else txtMa.setText(nxbBUS.generateNewMaNXB());

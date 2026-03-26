@@ -1,235 +1,232 @@
 package Frontend.GUI.ThongKeGUI;
 
+import Backend.BUS.ThongKe_PhanQuyen.ThongKeBUS;
+import Backend.DTO.ThongKe_PhanQuyen.ThongKeDTO;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.awt.geom.RoundRectangle2D;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 
 public class ThongKePanel extends JPanel {
 
-    private final Color PRIMARY = new Color(15, 32, 65);
+    private ThongKeBUS tkBUS = new ThongKeBUS();
+    private JComboBox<String> cboKieuThoiGian;
+    private JSpinner spTuNgay, spDenNgay;
+    private JButton btnLayDuLieu;
+    private JLabel lblValueDoanhThu, lblValueSachBan, lblValueDonHang, lblValueKhachHang, lblValueTongChi;
 
-    private JComboBox<String> cboDoiTuong;
-    private JComboBox<String> cboKieu;
-    private JSpinner spTuNgay;
-    private JSpinner spDenNgay;
-    private JButton btnThongKe;
-
+    private JComboBox<String> cboLoaiChiTiet;
+    private JComboBox<Integer> cboNam; 
     private JTable table;
     private DefaultTableModel model;
 
-    private JLabel lblValueDoanhThu;
-    private JLabel lblValueSachBan;
-    private JLabel lblValueDonHang;
-    private JLabel lblValueKhachHang;
-
-    private JLabel lblTongThu;
-    private JLabel lblTongChi;
-    private JLabel lblLoiNhuan;
-
     public ThongKePanel() {
         initComponent();
-        initEvent();
+        addEvents();
+        setDefaultDate();
+        loadDataTongQuan();
+        loadDataChiTiet();
     }
 
     private void initComponent() {
+        // Tăng insets cạnh dưới (30) để tạo khoảng đệm an toàn với đáy màn hình
+        setLayout(new MigLayout("fill, wrap 1, insets 25 25 30 25", "[fill]", "[]30[grow, 0::]"));
+        setBackground(new Color(245, 247, 250)); 
 
-        setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
-
-        JLabel lblTitle = new JLabel("THỐNG KÊ");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        lblTitle.setBorder(new EmptyBorder(10,15,10,10));
-
-        add(lblTitle, BorderLayout.NORTH);
-
-        JPanel main = new JPanel(new MigLayout("fill, wrap 1, insets 10", "[fill]", "[][][][grow]"));
-        main.setBackground(Color.WHITE);
-
-        main.add(createFilterPanel(), "growx");
-        main.add(createDashboardPanel(), "growx");
-        main.add(createSummaryPanel(), "growx");
-        main.add(createTablePanel(), "grow");
-
-        add(main, BorderLayout.CENTER);
+        add(createUpperSection(), "growx");
+        add(createLowerSection(), "grow, h 0::"); 
     }
 
-    private JPanel createFilterPanel() {
+    private void addEvents() {
+        btnLayDuLieu.addActionListener(e -> loadDataTongQuan());
+        cboLoaiChiTiet.addActionListener(e -> loadDataChiTiet());
+        cboNam.addActionListener(e -> loadDataChiTiet());
+    }
 
-        JPanel pnl = new JPanel(new MigLayout("wrap 6, fill", "[][150!][][150!][][150!]"));
-        pnl.setBackground(Color.WHITE);
-        pnl.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(PRIMARY,2),
-                "Bộ lọc thống kê",
-                0,0,
-                new Font("Segoe UI",Font.BOLD,14),
-                PRIMARY
-        ));
+    private void setDefaultDate() {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.DAY_OF_MONTH, 1); 
+        spTuNgay.setValue(cal.getTime());
+    }
 
-        pnl.add(new JLabel("Theo đối tượng:"));
-        cboDoiTuong = new JComboBox<>(new String[]{"Nhân viên","Khách hàng","Sản phẩm"});
-        pnl.add(cboDoiTuong);
+    private void loadDataTongQuan() {
+        Date tuNgay = (Date) spTuNgay.getValue();
+        Date denNgay = (Date) spDenNgay.getValue();
+        if (tuNgay.after(denNgay)) {
+            JOptionPane.showMessageDialog(this, "\"Từ ngày\" không thể lớn hơn \"Đến ngày\"!", "Lỗi ngày tháng", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        ThongKeDTO.TongQuan data = tkBUS.getTongQuan(tuNgay, denNgay);
+        lblValueDoanhThu.setText(tkBUS.formatMoney(data.getDoanhThu()));
+        lblValueTongChi.setText(tkBUS.formatMoney(data.getTongChi()));
+        lblValueSachBan.setText(String.valueOf(data.getSoSachDaBan()));
+        lblValueDonHang.setText(String.valueOf(data.getSoDonHang()));
+        lblValueKhachHang.setText(String.valueOf(data.getSoKhachHang()));
+    }
 
-        pnl.add(new JLabel("Kiểu thống kê:"));
-        cboKieu = new JComboBox<>(new String[]{"Theo ngày","Theo tháng","Theo quý","Theo năm"});
-        pnl.add(cboKieu);
+    private void loadDataChiTiet() {
+        int loaiIndex = cboLoaiChiTiet.getSelectedIndex(); 
+        int namDuocChon = (Integer) cboNam.getSelectedItem();
+        ArrayList<ThongKeDTO.ChiTiet> list = tkBUS.getChiTietTheoQuy(loaiIndex, namDuocChon);
+        model.setRowCount(0); 
+        for (ThongKeDTO.ChiTiet item : list) {
+            model.addRow(new Object[]{
+                item.getTenDoiTuong(),
+                tkBUS.formatMoney(item.getQuy1()),
+                tkBUS.formatMoney(item.getQuy2()),
+                tkBUS.formatMoney(item.getQuy3()),
+                tkBUS.formatMoney(item.getQuy4()),
+                tkBUS.formatMoney(item.getTongCong())
+            });
+        }
+    }
 
-        pnl.add(new JLabel("Từ ngày:"));
-        spTuNgay = new JSpinner(new SpinnerDateModel());
-        spTuNgay.setEditor(new JSpinner.DateEditor(spTuNgay,"yyyy-MM-dd"));
-        pnl.add(spTuNgay);
-
-        pnl.add(new JLabel("Đến ngày:"));
-        spDenNgay = new JSpinner(new SpinnerDateModel());
-        spDenNgay.setEditor(new JSpinner.DateEditor(spDenNgay,"yyyy-MM-dd"));
-        pnl.add(spDenNgay);
-
-        btnThongKe = new JButton("Thống kê");
-        btnThongKe.setFont(new Font("Segoe UI",Font.BOLD,14));
-        btnThongKe.setBackground(PRIMARY);
-        btnThongKe.setForeground(Color.WHITE);
-        btnThongKe.setFocusPainted(false);
-
-        pnl.add(btnThongKe,"span 6, right, w 150!, h 40!");
-
+    // --- (Phần createUpperSection giữ nguyên như cũ) ---
+    private JPanel createUpperSection() {
+        JPanel pnl = new JPanel(new MigLayout("fill, wrap 1, insets 0", "[fill]", "[]20[]"));
+        pnl.setOpaque(false);
+        JPanel pnlFilter = new JPanel(new MigLayout("insets 10 15 10 15, gapx 10", "[]10[]25[]10[]25[]10[] push"));
+        pnlFilter.setBackground(Color.WHITE);
+        pnlFilter.setBorder(new LineBorder(new Color(230, 230, 230), 1, true));
+        JLabel title = new JLabel("BỘ LỌC:");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        title.setForeground(new Color(100, 100, 100));
+        pnlFilter.add(title);
+        pnlFilter.add(new JLabel("Từ:"));
+        spTuNgay = createCustomSpinner();
+        pnlFilter.add(spTuNgay, "width 130!");
+        pnlFilter.add(new JLabel("Đến:"));
+        spDenNgay = createCustomSpinner();
+        pnlFilter.add(spDenNgay, "width 130!");
+        btnLayDuLieu = new JButton("Lấy dữ liệu");
+        btnLayDuLieu.setBackground(new Color(63, 81, 181));
+        btnLayDuLieu.setForeground(Color.WHITE);
+        btnLayDuLieu.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        pnlFilter.add(btnLayDuLieu, "width 120!, height 32!, gapleft 20");
+        JPanel pnlCards = new JPanel(new MigLayout("fill, gapx 15, insets 0", "[grow][grow][grow][grow][grow]"));
+        pnlCards.setOpaque(false);
+        pnlCards.add(createRoundedCard("DOANH THU", "0 VNĐ", new Color(46, 204, 113), "revenue"));
+        pnlCards.add(createRoundedCard("TỔNG CHI", "0 VNĐ", new Color(231, 76, 60), "cost"));
+        pnlCards.add(createRoundedCard("SÁCH ĐÃ BÁN", "0", new Color(52, 152, 219), "books"));
+        pnlCards.add(createRoundedCard("ĐƠN HÀNG", "0", new Color(241, 196, 15), "orders"));
+        pnlCards.add(createRoundedCard("KHÁCH HÀNG", "0", new Color(155, 89, 182), "customers"));
+        pnl.add(pnlFilter);
+        pnl.add(pnlCards);
         return pnl;
     }
 
-    private JPanel createDashboardPanel() {
-
-        JPanel pnl = new JPanel(new MigLayout("fill","[grow][grow][grow][grow]"));
-        pnl.setBackground(Color.WHITE);
-        pnl.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(PRIMARY,2),
-                "Tổng quan",
-                0,0,
-                new Font("Segoe UI",Font.BOLD,14),
-                PRIMARY
-        ));
-
-        pnl.add(createCard("Doanh thu"));
-        pnl.add(createCard("Sách đã bán"));
-        pnl.add(createCard("Đơn hàng"));
-        pnl.add(createCard("Khách hàng"));
-
-        return pnl;
+    private JSpinner createCustomSpinner() {
+        JSpinner spinner = new JSpinner(new SpinnerDateModel());
+        JSpinner.DateEditor editor = new JSpinner.DateEditor(spinner, "dd/MM/yyyy");
+        spinner.setEditor(editor);
+        spinner.setPreferredSize(new Dimension(130, 30));
+        return spinner;
     }
 
-    private JPanel createCard(String title){
-
-        JPanel card = new JPanel(new BorderLayout());
-        card.setBackground(Color.WHITE);
-        card.setBorder(BorderFactory.createLineBorder(PRIMARY,2));
-        card.setPreferredSize(new Dimension(260,120));
-
-        JLabel lblTitle = new JLabel(title,SwingConstants.CENTER);
-        lblTitle.setFont(new Font("Segoe UI",Font.BOLD,16));
-        lblTitle.setForeground(PRIMARY);
-
-        JLabel lblValue = new JLabel("0",SwingConstants.CENTER);
-        lblValue.setFont(new Font("Segoe UI",Font.BOLD,26));
-
-        card.add(lblTitle,BorderLayout.NORTH);
-        card.add(lblValue,BorderLayout.CENTER);
-
-        if(title.contains("Doanh")) lblValueDoanhThu = lblValue;
-        if(title.contains("Sách")) lblValueSachBan = lblValue;
-        if(title.contains("Đơn")) lblValueDonHang = lblValue;
-        if(title.contains("Khách")) lblValueKhachHang = lblValue;
-
+    private JPanel createRoundedCard(String title, String value, Color bgColor, String type) {
+        JPanel card = new JPanel(new MigLayout("wrap 1, insets 20", "[center, fill]", "[]12[]")) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(bgColor);
+                g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 30, 30)); 
+                g2.dispose();
+            }
+        };
+        card.setOpaque(false);
+        card.setPreferredSize(new Dimension(220, 140)); 
+        JLabel lblTitle = new JLabel(title);
+        lblTitle.setForeground(new Color(255, 255, 255, 200));
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        JLabel lblVal = new JLabel(value);
+        lblVal.setForeground(Color.WHITE);
+        lblVal.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        card.add(lblTitle);
+        card.add(lblVal);
+        switch (type) {
+            case "revenue" -> lblValueDoanhThu = lblVal;
+            case "cost" -> lblValueTongChi = lblVal;
+            case "books" -> lblValueSachBan = lblVal;
+            case "orders" -> lblValueDonHang = lblVal;
+            case "customers" -> lblValueKhachHang = lblVal;
+        }
         return card;
     }
 
-    private JPanel createSummaryPanel(){
-
-        JPanel pnl = new JPanel(new MigLayout("fill","[grow][grow][grow]"));
+    private JPanel createLowerSection() {
+        // Tăng khoảng cách tiêu đề và bảng (gap 30) để lộ rõ viền dưới của Combobox
+        JPanel pnl = new JPanel(new MigLayout("fill, wrap 1, insets 20", "[fill]", "[]30[grow, 0::]"));
         pnl.setBackground(Color.WHITE);
-        pnl.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(PRIMARY,2),
-                "Lợi nhuận",
-                0,0,
-                new Font("Segoe UI",Font.BOLD,14),
-                PRIMARY
-        ));
+        pnl.setBorder(new LineBorder(new Color(225, 225, 225), 1, true));
 
-        lblTongThu = createSummaryLabel("Tổng thu: 0 VNĐ");
-        lblTongChi = createSummaryLabel("Tổng chi: 0 VNĐ");
-        lblLoiNhuan = createSummaryLabel("Lợi nhuận: 0 VNĐ");
+        // Dùng MigLayout cho phần tiêu đề để kiểm soát khoảng cách tốt hơn
+        JPanel pnlHeader = new JPanel(new MigLayout("insets 0, fillx", "[left]push[right]"));
+        pnlHeader.setOpaque(false);
+        
+        JLabel title = new JLabel("CHI TIẾT DOANH THU THEO QUÝ");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        pnlHeader.add(title);
 
-        pnl.add(lblTongThu);
-        pnl.add(lblTongChi);
-        pnl.add(lblLoiNhuan);
+        // Panel chứa các nút điều khiển
+        JPanel pnlControls = new JPanel(new MigLayout("insets 0, gapx 15"));
+        pnlControls.setOpaque(false);
 
-        return pnl;
-    }
+        // --- EASTER EGG TROLL: DANH SÁCH NĂM KÉO DÀI VỀ NĂM 1 ---
+        int currentYear = tkBUS.getNamHienTai();
+        // Tạo mảng chứa toàn bộ số năm từ hiện tại lùi về năm 1
+        Integer[] years = new Integer[currentYear]; 
+        for (int i = 0; i < currentYear; i++) {
+            years[i] = currentYear - i; 
+        }
+        
+        cboNam = new JComboBox<>(years);
+        cboNam.setMaximumRowCount(15); // Hiện 15 dòng mỗi lần bung để nhìn cho choáng
+        cboNam.setPreferredSize(new Dimension(110, 35));
+        // Thêm Tooltip để tăng tính troll
+        cboNam.setToolTipText("Kéo xuống nếu bạn muốn xem doanh thu từ thời Phục Hưng hoặc Đồ Đá...");
 
-    private JLabel createSummaryLabel(String text){
-        JLabel lbl = new JLabel(text,SwingConstants.CENTER);
-        lbl.setFont(new Font("Segoe UI",Font.BOLD,15));
-        lbl.setBorder(BorderFactory.createLineBorder(PRIMARY,2));
-        return lbl;
-    }
+        cboLoaiChiTiet = new JComboBox<>(new String[]{"Nhân Viên", "Khách Hàng", "Sản Phẩm"});
+        cboLoaiChiTiet.setPreferredSize(new Dimension(180, 35)); 
 
-    private JPanel createTablePanel(){
+        pnlControls.add(new JLabel("Năm:"), "gapright 5");
+        pnlControls.add(cboNam);
+        pnlControls.add(cboLoaiChiTiet);
 
-        JPanel pnl = new JPanel(new BorderLayout());
-        pnl.setBackground(Color.WHITE);
-        pnl.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(PRIMARY,2),
-                "Chi tiết thống kê",
-                0,0,
-                new Font("Segoe UI",Font.BOLD,14),
-                PRIMARY
-        ));
-
-        model = new DefaultTableModel(
-                new String[]{"Tên","Q1","Q2","Q3","Q4","Tổng cộng"},0){
-            public boolean isCellEditable(int r,int c){ return false;}
+        pnlHeader.add(pnlControls);
+        
+        // Cấu hình bảng dữ liệu
+        String[] columns = {"Tên đối tượng", "Quý 1 (VNĐ)", "Quý 2 (VNĐ)", "Quý 3 (VNĐ)", "Quý 4 (VNĐ)", "TỔNG CỘNG"};
+        model = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int r, int c) { return false; }
         };
-
         table = new JTable(model);
-        table.setRowHeight(35);
-        table.setFont(new Font("Segoe UI",Font.PLAIN,14));
-
-        JTableHeader header = table.getTableHeader();
-        header.setBackground(PRIMARY);
-        header.setForeground(Color.WHITE);
-        header.setFont(new Font("Segoe UI",Font.BOLD,15));
-
-        pnl.add(new JScrollPane(table),BorderLayout.CENTER);
-        return pnl;
-    }
-
-    private void initEvent(){
-        btnThongKe.addActionListener(e->xuLyThongKe());
-    }
-
-    private void xuLyThongKe(){
-
-        Date tuNgay = (Date) spTuNgay.getValue();
-        Date denNgay = (Date) spDenNgay.getValue();
-
-        if(tuNgay.after(denNgay)){
-            JOptionPane.showMessageDialog(this,"Từ ngày phải nhỏ hơn Đến ngày!");
-            return;
+        table.setRowHeight(40);
+        table.getTableHeader().setPreferredSize(new Dimension(0, 40));
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        for(int i=1; i<table.getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
         }
 
-        model.setRowCount(0);
-
-        model.addRow(new Object[]{"NV01",1000000,2000000,1500000,3000000,7500000});
-        model.addRow(new Object[]{"NV02",2000000,1000000,2500000,1000000,6500000});
-
-        lblValueDoanhThu.setText("14,000,000 VNĐ");
-        lblValueSachBan.setText("320");
-        lblValueDonHang.setText("120");
-        lblValueKhachHang.setText("85");
-
-        lblTongThu.setText("Tổng thu: 14,000,000 VNĐ");
-        lblTongChi.setText("Tổng chi: 5,000,000 VNĐ");
-        lblLoiNhuan.setText("Lợi nhuận: 9,000,000 VNĐ");
+        JScrollPane scroll = new JScrollPane(table);
+        scroll.setBorder(BorderFactory.createEmptyBorder());
+        
+        // Thêm các thành phần vào Panel chính
+        pnl.add(pnlHeader, "growx");
+        // h 0:: đảm bảo JScrollPane co giãn đúng và hiện thanh cuộn khi danh sách quá dài
+        pnl.add(scroll, "grow, h 0::"); 
+        
+        return pnl;
     }
 }

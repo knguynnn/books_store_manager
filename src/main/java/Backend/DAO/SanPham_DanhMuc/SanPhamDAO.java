@@ -1,9 +1,13 @@
 package Backend.DAO.SanPham_DanhMuc;
 
-import Backend.DatabaseHelper;
-import Backend.DTO.SanPham_DanhMuc.SanPhamDTO;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
+
+import Backend.DTO.SanPham_DanhMuc.SanPhamDTO;
+import Backend.DatabaseHelper;
 
 public class SanPhamDAO {
     private SanPhamDTO mapRow(ResultSet rs) throws SQLException {
