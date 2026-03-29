@@ -18,6 +18,7 @@ public class SanPhamDAO {
         sp.setSoLuongTon(rs.getInt("SLTonKho"));
         sp.setDonViTinh(rs.getString("DonViTinh"));
         sp.setDonGia(rs.getLong("DonGia"));
+        sp.setPhanTram(rs.getInt("PhanTram"));
         sp.setNamXuatBan(rs.getInt("NamXB"));
         sp.setMaNXB(rs.getString("MaNXB"));
         sp.setMoTa(rs.getString("MoTa"));
@@ -44,8 +45,8 @@ public class SanPhamDAO {
 
     public boolean insert(SanPhamDTO sp) {
         // Thêm HinhAnh vào câu lệnh SQL
-        String sql = "INSERT INTO sanpham (MaSP, HinhAnh, Ten, MaTG, MaTL, MaNXB, SLTonKho, DonViTinh, DonGia, NamXB, MoTa, TrangThai) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO sanpham (MaSP, HinhAnh, Ten, MaTG, MaTL, MaNXB, SLTonKho, DonViTinh, DonGia, PhanTram, NamXB, MoTa, TrangThai) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = DatabaseHelper.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -59,9 +60,10 @@ public class SanPhamDAO {
             ps.setInt(7, sp.getSoLuongTon());
             ps.setString(8, sp.getDonViTinh());
             ps.setLong(9, sp.getDonGia());
-            ps.setInt(10, sp.getNamXuatBan());
-            ps.setString(11, sp.getMoTa());
-            ps.setBoolean(12, sp.isTrangThai());
+            ps.setLong(10, sp.getPhanTram());
+            ps.setInt(11, sp.getNamXuatBan());
+            ps.setString(12, sp.getMoTa());
+            ps.setBoolean(13, sp.isTrangThai());
             
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -72,7 +74,7 @@ public class SanPhamDAO {
 
     public boolean update(SanPhamDTO sp) {
         // Thêm HinhAnh=? vào câu lệnh SQL
-        String sql = "UPDATE sanpham SET HinhAnh=?, Ten=?, MaTG=?, MaTL=?, MaNXB=?, SLTonKho=?, DonViTinh=?, DonGia=?, NamXB=?, MoTa=?, TrangThai=? "
+        String sql = "UPDATE sanpham SET HinhAnh=?, Ten=?, MaTG=?, MaTL=?, MaNXB=?, SLTonKho=?, DonViTinh=?, DonGia=?, PhanTram=?, NamXB=?, MoTa=?, TrangThai=? "
                    + "WHERE MaSP=?";
         
         try (Connection conn = DatabaseHelper.getConnection();
@@ -86,10 +88,11 @@ public class SanPhamDAO {
             ps.setInt(6, sp.getSoLuongTon());
             ps.setString(7, sp.getDonViTinh());
             ps.setLong(8, sp.getDonGia());
-            ps.setInt(9, sp.getNamXuatBan());
-            ps.setString(10, sp.getMoTa());
-            ps.setBoolean(11, sp.isTrangThai());
-            ps.setString(12, sp.getMaSP()); 
+            ps.setInt(9, sp.getPhanTram());
+            ps.setInt(10, sp.getNamXuatBan());
+            ps.setString(11, sp.getMoTa());
+            ps.setBoolean(12, sp.isTrangThai());
+            ps.setString(13, sp.getMaSP()); 
             
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {

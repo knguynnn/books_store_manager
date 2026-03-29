@@ -2,6 +2,7 @@ package Backend.BUS.SanPham_DanhMuc;
 
 import Backend.DAO.SanPham_DanhMuc.NhaXuatBanDAO;
 import Backend.DTO.SanPham_DanhMuc.NhaXuatBanDTO;
+
 import java.util.ArrayList;
 
 public class NhaXuatBanBUS {
@@ -21,13 +22,25 @@ public class NhaXuatBanBUS {
         return listNXB;
     }
 
+    private String validateCommon(NhaXuatBanDTO nxb) {
+        if (nxb.getTenNXB() == null || nxb.getTenNXB().trim().isEmpty())
+            return "Tên nhà xuất bản không được để trống!";
+        if (nxb.getDiaChi() == null || nxb.getDiaChi().isEmpty())
+            return "Địa chỉ nhà xuất bản không được để trống!";
+        if (nxb.getEmail() == null || nxb.getEmail().isEmpty())
+            return "Email nhà xuất bản không được để trống!";
+        if (nxb.getSoDienThoai() == null || nxb.getSoDienThoai().isEmpty())
+            return "Số điện thoại nhà xuất bản không được để trống!";
+        return null;
+    }
+
     /**
      * Thêm NXB: Tự động gán mã mới nhất từ hệ thống
      */
     public String validateAndAdd(NhaXuatBanDTO nxb) {
-        if (nxb.getTenNXB() == null || nxb.getTenNXB().trim().isEmpty()) return "Tên nhà xuất bản không được để trống!";
-        
-        // Luôn tạo mã mới để tránh trùng lặp khi nhiều người cùng dùng
+        String error = validateCommon(nxb);
+        if (error != null) return error;
+
         nxb.setMaNXB(generateNewMaNXB());
 
         if (nxbDAO.insert(nxb)) {
@@ -41,8 +54,9 @@ public class NhaXuatBanBUS {
      * Cập nhật NXB: Kiểm tra các trường thông tin cơ bản
      */
     public String validateAndUpdate(NhaXuatBanDTO nxb) {
-        if (nxb.getTenNXB() == null || nxb.getTenNXB().trim().isEmpty()) return "Tên nhà xuất bản không được để trống!";
-        
+        String error = validateCommon(nxb);
+        if (error != null) return error;
+
         if (nxbDAO.update(nxb)) {
             refreshData();
             return "SUCCESS";

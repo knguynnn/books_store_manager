@@ -9,6 +9,7 @@ public class SanPhamDTO {
     private int soLuongTon;
     private String donViTinh;
     private long donGia;
+    private int phanTram;
     private int namXuatBan;
     private String maNXB;
     private String moTa;
@@ -18,7 +19,7 @@ public class SanPhamDTO {
 
     // Cập nhật Constructor đầy đủ tham số
     public SanPhamDTO(String maSP, String hinhAnh, String tenSP, String maTG, String maTL, int soLuongTon, 
-                      String donViTinh, long donGia, int namXuatBan, String maNXB, 
+                      String donViTinh, long donGia, int phanTram, int namXuatBan, String maNXB, 
                       String moTa, boolean trangThai) {
         this.maSP = maSP;
         this.hinhAnh = hinhAnh; 
@@ -28,6 +29,7 @@ public class SanPhamDTO {
         this.soLuongTon = soLuongTon;
         this.donViTinh = donViTinh;
         this.donGia = donGia;
+        this.phanTram = phanTram;
         this.namXuatBan = namXuatBan;
         this.maNXB = maNXB;
         this.moTa = moTa;
@@ -59,6 +61,9 @@ public class SanPhamDTO {
 
     public long getDonGia() { return donGia; }
     public void setDonGia(long donGia) { this.donGia = donGia; }
+
+    public int getPhanTram() { return phanTram; }
+    public void setPhanTram(int phanTram) { this.phanTram = phanTram; }
 
     public int getNamXuatBan() { return namXuatBan; }
     public void setNamXuatBan(int namXuatBan) { this.namXuatBan = namXuatBan; }
