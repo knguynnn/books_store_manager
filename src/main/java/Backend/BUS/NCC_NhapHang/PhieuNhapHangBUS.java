@@ -96,6 +96,7 @@ public class PhieuNhapHangBUS {
                     conn.rollback();
                     return false;
                 }
+                sanPhamDAO.updateDonGia(ct.getMaSP(), ct.getDonGiaNhap(), conn);    
             }
 
             conn.commit();
@@ -156,6 +157,7 @@ public class PhieuNhapHangBUS {
                     conn.rollback();
                     return false;
                 }
+                sanPhamDAO.updateDonGia(ct.getMaSP(), ct.getDonGiaNhap(), conn);
             }
 
             conn.commit();
@@ -195,6 +197,10 @@ public class PhieuNhapHangBUS {
 
             // Xóa phiếu nhập (cascade xóa chi tiết)
             phieuNhapDAO.delete(maPhieuNhap, conn);
+
+            for (CTPhieuNhapHangDTO ct : dsCT) {
+                sanPhamDAO.recalcDonGia(ct.getMaSP(), conn);
+            }
 
             conn.commit();
             return true;

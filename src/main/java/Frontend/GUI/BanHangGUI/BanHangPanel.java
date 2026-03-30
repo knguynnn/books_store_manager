@@ -124,8 +124,12 @@ public class BanHangPanel extends JPanel {
         loadData();
 
         Backend.BUS.EventBus.subscribe(eventName -> {
-            if (eventName.equals("SAN_PHAM_CHANGED")) {
-                // ✅ Cập nhật combo sản phẩm (số lượng tồn mới nhất) trên EDT thread
+            // Lắng nghe cả 3 sự kiện: Sản phẩm, Nhân viên HOẶC Khách hàng thay đổi
+            if (eventName.equals("SAN_PHAM_CHANGED") || 
+                eventName.equals("NHAN_VIEN_CHANGED") || 
+                eventName.equals("KHACH_HANG_CHANGED")) {
+                
+                // Hàm loadComboData() của bạn đã có nạp cả Khách hàng nên chỉ cần gọi lại là xong
                 SwingUtilities.invokeLater(() -> loadComboData());
             }
         });
@@ -1016,6 +1020,9 @@ public class BanHangPanel extends JPanel {
 
     private void loadComboData() {
         sanPhamBUS.refreshData();
+        nhanVienBUS.refreshData();
+        khachHangBUS.refreshData();
+        
 
         // Nhân viên
         cboMaNV.removeAllItems();

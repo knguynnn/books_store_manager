@@ -27,6 +27,7 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -96,7 +97,22 @@ public class NhapHangPanel extends JPanel {
 
     public NhapHangPanel() {
         initComponent();
-        new NhapHangController(this);
+        
+        // Lưu controller lại để gọi hàm
+        NhapHangController controller = new NhapHangController(this);
+        
+        // ĐĂNG KÝ BẮT SÓNG
+        Backend.BUS.EventBus.subscribe(eventName -> {
+            if (eventName.equals("NHAN_VIEN_CHANGED")) {
+                SwingUtilities.invokeLater(() -> {
+                    // Gọi hàm load lại ComboBox Nhân Viên bên Controller của bạn
+                    // (Đảm bảo hàm loadNhanVienCombo() trong NhapHangController đã là "public")
+                    controller.loadNhanVienCombo();
+                });
+            }
+            
+            // Bạn có thể nhét thêm các if cho SAN_PHAM_CHANGED, NCC_CHANGED vào dưới này
+        });
     }
 
     // ============================ GIAO DIỆN ============================

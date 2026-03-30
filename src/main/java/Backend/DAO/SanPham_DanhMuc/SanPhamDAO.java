@@ -207,4 +207,45 @@ public class SanPhamDAO {
             return ps.executeUpdate() > 0;
         }
     }
+
+        /**
+     * Cập nhật DonGia dựa trên giá nhập mới + PhanTram hiện có của sản phẩm.
+     * Gọi trong transaction khi tạo / sửa phiếu nhập.
+     * Bỏ qua sản phẩm chưa thiết lập lợi nhuận (PhanTram = 0).
+     */
+    public boolean updateDonGia(String maSP, long donGiaNhap, Connection conn) throws SQLException {
+        String sql = "UPDATE sanpham "
+                + "SET DonGia = ROUND(? * (1 + PhanTram / 100.0) / 100) * 100 "
+                + "WHERE MaSP = ? AND PhanTram > 0";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, donGiaNhap);
+            ps.setString(2, maSP);
+            ps.executeUpdate();   // executeUpdate() >= 0 luôn đúng; 0 dòng = PhanTram chưa set
+            return true;
+        }
+    }
+
+    /**
+     * Tính lại DonGia từ giá nhập mới nhất còn lại trong DB.
+     * Gọi trong transaction sau khi xóa phiếu nhập (cascade đã xóa CT cũ).
+     * Nếu không còn phiếu nhập nào → DonGia đặt về 0.
+     */
+    public boolean recalcDonGia(String maSP, Connection conn) throws SQLException {
+        String sql = "UPDATE sanpham sp "
+                + "SET sp.DonGia = COALESCE( "
+                + "    (SELECT ROUND(ct.DonGiaNhap * (1 + sp2.PhanTram / 100.0) / 100) * 100 "
+                + "     FROM ctphieunhaphang ct "
+                + "     JOIN phieunhaphang pn ON ct.MaPhieuNhap = pn.MaPhieuNhap "
+                + "     JOIN sanpham sp2 ON ct.MaSP = sp2.MaSP "
+                + "     WHERE ct.MaSP = ? AND sp2.PhanTram > 0 "
+                + "     ORDER BY pn.NgayNhap DESC LIMIT 1), "
+                + "    0) "
+                + "WHERE sp.MaSP = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maSP);
+            ps.setString(2, maSP);
+            ps.executeUpdate();
+            return true;
+        }
+    }
 }

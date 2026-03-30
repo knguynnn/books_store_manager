@@ -283,25 +283,24 @@ public class NhapHangController {
         errorRows.add("Dòng " + (rowIndex + 1) + ": " + reason);
     }
 
-    private void loadNhanVienCombo() {
+    public void loadNhanVienCombo() {
+        nhanVienBUS.refreshData(); 
+        
         view.getCboMaNV().removeAllItems();
         for (NhanVienDTO nv : nhanVienBUS.getAll()) {
-            if (nv.isTrangThai()) {
-                String hoTen = (nv.getHoNV() == null ? "" : nv.getHoNV().trim()) + " "
-                        + (nv.getTenNV() == null ? "" : nv.getTenNV().trim());
-                view.getCboMaNV().addItem(nv.getMaNV() + " - " + hoTen.trim());
-            }
+            view.getCboMaNV().addItem(nv.getMaNV() + " - " + nv.getTenNV());
         }
     }
 
-    private void loadNCCCombo() {
+    
+    public void loadNCCCombo() {
         view.getCboMaNCC().removeAllItems();
         for (NhaCungCapDTO ncc : nccBUS.getAll()) {
             view.getCboMaNCC().addItem(ncc.getMaNCC() + " - " + ncc.getTenNCC());
         }
     }
 
-    private void loadSanPhamCombo() {
+    public void loadSanPhamCombo() {
         sanPhamBUS.refreshData();
         view.getCboMaSP().removeAllItems();
         for (SanPhamDTO sp : sanPhamBUS.getActiveOnly()) {

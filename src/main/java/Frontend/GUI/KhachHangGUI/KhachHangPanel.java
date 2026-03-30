@@ -321,21 +321,40 @@ public class KhachHangPanel extends JPanel {
 
     private void themKhachHang() {
         if (!validateInput()) return;
-        KhachHangDTO kh = createKhachHangDTO();
-        if (bus.addKhachHang(kh)) { showSuccess("Thêm thành công!"); loadData(); resetForm(); }
+        if (bus.addKhachHang(createKhachHangDTO())) {
+            showSuccess("Thêm khách hàng thành công!");
+            
+            // PHÁT TÍN HIỆU CHO TOÀN HỆ THỐNG
+            Backend.BUS.EventBus.publish("KHACH_HANG_CHANGED");
+            
+            loadData();
+            resetForm();
+        }
     }
 
     private void suaKhachHang() {
         if (!isEditing) return;
-        if (!validateInput()) return;
-        if (bus.updateKhachHang(createKhachHangDTO())) { showSuccess("Sửa thành công!"); loadData(); resetForm(); }
+        if (bus.updateKhachHang(createKhachHangDTO())) {
+            showSuccess("Cập nhật thành công!");
+            
+            // PHÁT TÍN HIỆU CHO TOÀN HỆ THỐNG
+            Backend.BUS.EventBus.publish("KHACH_HANG_CHANGED");
+            
+            loadData();
+            resetForm();
+        }
     }
 
     private void xoaKhachHang() {
-        int row = table.getSelectedRow();
-        if (row < 0) return;
-        if (JOptionPane.showConfirmDialog(this, "Xác nhận thay đổi trạng thái?") == 0) {
-            if (bus.deleteKhachHang(model.getValueAt(row, 0).toString())) { loadData(); resetForm(); }
+        if (JOptionPane.showConfirmDialog(this, "Xóa khách hàng này?") == 0) {
+            if (bus.deleteKhachHang(txtMa.getText())) {
+                
+                // PHÁT TÍN HIỆU CHO TOÀN HỆ THỐNG
+                Backend.BUS.EventBus.publish("KHACH_HANG_CHANGED");
+                
+                loadData();
+                resetForm();
+            }
         }
     }
 

@@ -308,20 +308,36 @@ public class NhanVienPanel extends JPanel {
     private void themNhanVien() {
         if (!validateInput()) return;
         if (bus.addNhanVien(createNhanVienDTO())) {
-            showSuccess("Thêm thành công!"); loadData(); resetForm();
+            showSuccess("Thêm thành công!"); 
+            loadData(); 
+            resetForm();
+            
+            // BÁO CHO TOÀN HỆ THỐNG BIẾT: ĐÃ THÊM NHÂN VIÊN
+            Backend.BUS.EventBus.publish("NHAN_VIEN_CHANGED");
         }
     }
 
     private void suaNhanVien() {
         if (!isEditing) return;
         if (bus.updateNhanVien(createNhanVienDTO())) {
-            showSuccess("Sửa thành công!"); loadData(); resetForm();
+            showSuccess("Sửa thành công!"); 
+            loadData(); 
+            resetForm();
+            
+            // BÁO CHO TOÀN HỆ THỐNG BIẾT: ĐÃ SỬA NHÂN VIÊN
+            Backend.BUS.EventBus.publish("NHAN_VIEN_CHANGED");
         }
     }
 
     private void xoaNhanVien() {
         if (JOptionPane.showConfirmDialog(this, "Xóa nhân viên này?") == 0) {
-            if (bus.deleteNhanVien(txtMa.getText())) { loadData(); resetForm(); }
+            if (bus.deleteNhanVien(txtMa.getText())) { 
+                loadData(); 
+                resetForm(); 
+                
+                // BÁO CHO TOÀN HỆ THỐNG BIẾT: ĐÃ XÓA NHÂN VIÊN
+                Backend.BUS.EventBus.publish("NHAN_VIEN_CHANGED");
+            }
         }
     }
 
