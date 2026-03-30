@@ -75,38 +75,31 @@ INSERT INTO `taikhoan` (`TenDangNhap`, `MatKhau`, `MaNV`, `MaQuyen`, `TrangThai`
 ('nv_tuan', '123456', 'NV003', 'KHO', 1),
 ('nv_lan', '123456', 'NV004', 'SECURITY', 1);
 
--- Sản phẩm & Liên kết
-INSERT INTO `sanpham` (`MaSP`, `Ten`, `MaTG`, `MaTL`, `MaNXB`, `MaNCC`, `SLTonKho`, `DonViTinh`, `DonGia`, `NamXB`, `MoTa`, `TrangThai`) VALUES
-('SP004', 'Cho Tôi Xin Một Vé Đi Tuổi Thơ', 'TG001', 'TL001', 'NXB001', 'NCC001', 30, 'Cuốn', 85000.00, 2018, 'Ký ức tuổi thơ đầy xúc động', 1),
-('SP005', 'Quẳng Gánh Lo Đi Và Vui Sống', 'TG003', 'TL003', 'NXB001', 'NCC002', 45, 'Cuốn', 92000.00, 2020, 'Sách truyền cảm hứng sống tích cực', 1),
-('SP006', 'Tôi Thấy Hoa Vàng Trên Cỏ Xanh', 'TG001', 'TL001', 'NXB001', 'NCC001', 80, 'Cuốn', 125000.00, 2022, 'Truyện dài của Nguyễn Nhật Ánh', 1),
-('SP007', 'Doraemon tập 1', 'TG002', 'TL002', 'NXB002', 'NCC002', 200, 'Cuốn', 25000.00, 2023, 'Manga kinh điển', 1);
-
 INSERT INTO `sanpham_tacgia` (`MaSP`, `MaTG`) VALUES ('SP004','TG001'), ('SP005','TG003'), ('SP006','TG001'), ('SP007','TG002');
 INSERT INTO `sanpham_theloai` (`MaSP`, `MaTL`) VALUES ('SP004','TL001'), ('SP005','TL003'), ('SP006','TL001'), ('SP007','TL002');
 
 -- Phiếu nhập & Hóa đơn
 INSERT INTO `phieunhaphang` (`MaPhieuNhap`, `NgayNhap`, `MaNV`, `MaNCC`, `TongTienNhap`) VALUES
-('PN001', '2024-03-01 09:00:00', 'NV003', 'NCC001', 2500000.00),
-('PN002', '2026-02-10 10:00:00', 'NV003', 'NCC001', 4000000.00),
-('PN003', '2026-02-15 15:30:00', 'NV003', 'NCC002', 1500000.00);
+('PN001', '2024-03-01 09:00:00', 'NV003', 'NCC001', 2750000.00),  
+('PN002', '2026-02-10 10:00:00', 'NV003', 'NCC001', 4000000.00),  
+('PN003', '2026-02-15 15:30:00', 'NV003', 'NCC002', 2000000.00);  
 
 INSERT INTO `ctphieunhaphang` (`MaPhieuNhap`, `MaSP`, `SL`, `DonGia`, `ThanhTien`) VALUES
-('PN001', 'SP001', 20, 80000.00, 1600000.00),
-('PN001', 'SP002', 15, 60000.00, 900000.00),
-('PN002', 'SP006', 40, 100000.00, 4000000.00),
-('PN003', 'SP007', 100, 15000.00, 1500000.00);
+('PN001', 'SP001', 20, 100000.00, 2000000.00),  
+('PN001', 'SP002', 15,  50000.00,  750000.00),  
+('PN002', 'SP006', 40, 100000.00, 4000000.00),  
+('PN003', 'SP007',100,  20000.00, 2000000.00);  
 
 INSERT INTO `hoadon` (`MaHD`, `ThoiGian`, `MaNV`, `MaKH`, `MaKM`, `TongTienTruocKM`, `GiamGiaHD`, `TongTienThanhToan`) VALUES
-('HD001', '2024-03-05 14:30:00', 'NV002', 'KH001', NULL, 165000.00, 0.00, 165000.00),
-('HD002', '2026-02-20 08:15:00', 'NV002', 'KH005', NULL, 375000.00, 0.00, 375000.00),
-('HD003', '2026-03-01 19:45:00', 'NV002', 'KH006', NULL, 300000.00, 0.00, 300000.00);
+('HD001', '2024-03-05 14:30:00', 'NV002', 'KH001', NULL, 165000.00,  0.00, 165000.00),
+('HD002', '2026-02-20 08:15:00', 'NV002', 'KH005', NULL, 550000.00,  0.00, 550000.00),
+('HD003', '2026-03-01 19:45:00', 'NV002', 'KH006', NULL, 264000.00,  0.00, 264000.00);
 
 INSERT INTO `cthoadon` (`MaHD`, `MaSP`, `SoLuong`, `DonGiaBan`, `ThanhTien`) VALUES
-('HD001', 'SP001', 1, 110000.00, 110000.00),
-('HD001', 'SP002', 1, 55000.00, 55000.00),
-('HD002', 'SP006', 3, 125000.00, 375000.00),
-('HD003', 'SP006', 2, 125000.00, 250000.00),
-('HD003', 'SP007', 2, 25000.00, 50000.00);
+('HD001', 'SP001', 1, 110000.00, 110000.00),  
+('HD001', 'SP002', 1,  55000.00,  55000.00),  
+('HD002', 'SP006', 5, 110000.00, 550000.00),  
+('HD003', 'SP007', 2,  22000.00,  44000.00),  
+('HD003', 'SP006', 2, 110000.00, 220000.00);  
 
 COMMIT;
