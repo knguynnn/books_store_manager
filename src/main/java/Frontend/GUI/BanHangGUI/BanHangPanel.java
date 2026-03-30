@@ -122,6 +122,13 @@ public class BanHangPanel extends JPanel {
         initComponent();
         initEvent();
         loadData();
+
+        Backend.BUS.EventBus.subscribe(eventName -> {
+            if (eventName.equals("SAN_PHAM_CHANGED")) {
+                // ✅ Cập nhật combo sản phẩm (số lượng tồn mới nhất) trên EDT thread
+                SwingUtilities.invokeLater(() -> loadComboData());
+            }
+        });
     }
 
     // ============================ GIAO DIỆN ============================
@@ -1221,6 +1228,8 @@ public class BanHangPanel extends JPanel {
 
             boolean ok = hoaDonBUS.taoHoaDon(hd, dsCTHD);
             if (ok) {
+                // ✅ Phát sự kiện để SanPhamPanel cập nhật tồn kho sau khi bán
+                Backend.BUS.EventBus.publish("SAN_PHAM_CHANGED");
                 showSuccess("Tạo hóa đơn " + hd.getMaHD() + " thành công!");
                 resetForm();
                 loadData();

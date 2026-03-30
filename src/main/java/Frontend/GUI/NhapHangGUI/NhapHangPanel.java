@@ -265,7 +265,7 @@ public class NhapHangPanel extends JPanel {
         }
 
         pnlButtons.add(btnLuu, "grow, h " + BUTTON_HEIGHT + "!");
-        pnlButtons.add(btnSua, "grow, h " + BUTTON_HEIGHT + "!");
+        // pnlButtons.add(btnSua, "grow, h " + BUTTON_HEIGHT + "!");
         pnlButtons.add(btnXoa, "grow, h " + BUTTON_HEIGHT + "!");
         pnlButtons.add(btnMoi, "grow, h " + BUTTON_HEIGHT + "!");
         pnlButtons.add(btnXuat, "grow, h " + BUTTON_HEIGHT + "!");

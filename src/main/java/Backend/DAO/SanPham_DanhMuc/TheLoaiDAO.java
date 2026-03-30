@@ -17,7 +17,6 @@ public class TheLoaiDAO {
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                // Khởi tạo DTO khớp với constructor (String maTL, String tenTL)
                 TheLoaiDTO tl = new TheLoaiDTO(
                     rs.getString("MaTL"),
                     rs.getString("TenTL")
@@ -26,7 +25,6 @@ public class TheLoaiDAO {
             }
         } catch (SQLException e) {
             System.out.println("❌ Lỗi truy vấn getAll thể loại: " + e.getMessage());
-            e.printStackTrace();
         }
         return list;
     }
@@ -38,8 +36,8 @@ public class TheLoaiDAO {
         try (Connection conn = DatabaseHelper.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, tl.getMaTL()); // Sử dụng getMaTL() từ DTO
-            ps.setString(2, tl.getTenTL()); // Sử dụng getTenTL() từ DTO
+            ps.setString(1, tl.getMaTL());
+            ps.setString(2, tl.getTenTL());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -56,7 +54,7 @@ public class TheLoaiDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setString(1, tl.getTenTL());
-            ps.setString(2, tl.getMaTL()); // MaTL dùng cho điều kiện WHERE
+            ps.setString(2, tl.getMaTL());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -65,21 +63,19 @@ public class TheLoaiDAO {
         }
     }
 
+    // 4. Xóa thể loại 
     public boolean delete(String maTL) {
-        boolean result = false;
-        // Đồng bộ hóa bản chất xóa mềm
-        String sql = "UPDATE theloai SET TrangThai = 0 WHERE MaTL = ?";
+        String sql = "DELETE FROM theloai WHERE MaTL = ?";
         try (Connection conn = DatabaseHelper.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setString(1, maTL);
-            if (ps.executeUpdate() > 0) {
-                result = true;
-            }
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.out.println("Lỗi xóa thể loại: " + e.getMessage());
+            // Lỗi này thường xảy ra nếu có sản phẩm đang thuộc thể loại này (Khóa ngoại)
+            System.out.println("❌ Lỗi xóa thể loại (Có thể do ràng buộc khóa ngoại): " + e.getMessage());
+            return false;
         }
-        return result;
     }
 
     // 5. Tìm kiếm thể loại theo tên hoặc mã

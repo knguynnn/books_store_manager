@@ -28,7 +28,6 @@ public class NhaXuatBanDAO {
             }
         } catch (SQLException e) {
             System.out.println("❌ Lỗi truy vấn getAll NXB: " + e.getMessage());
-            e.printStackTrace();
         }
         return list;
     }
@@ -42,7 +41,7 @@ public class NhaXuatBanDAO {
             
             ps.setString(1, nxb.getMaNXB());
             ps.setString(2, nxb.getTenNXB());
-            ps.setString(3, nxb.getSoDienThoai());
+            ps.setString(3, nxb.getSoDienThoai()); // Đảm bảo DTO có getter này
             ps.setString(4, nxb.getDiaChi());
             ps.setString(5, nxb.getEmail());
 
@@ -64,7 +63,7 @@ public class NhaXuatBanDAO {
             ps.setString(2, nxb.getSoDienThoai());
             ps.setString(3, nxb.getDiaChi());
             ps.setString(4, nxb.getEmail());
-            ps.setString(5, nxb.getMaNXB()); // MaNXB nằm cuối cho WHERE
+            ps.setString(5, nxb.getMaNXB());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -73,8 +72,9 @@ public class NhaXuatBanDAO {
         }
     }
 
+    // 4. Xóa Nhà xuất bản 
     public boolean delete(String maNXB) {
-        String sql = "UPDATE nxb SET TrangThai = 0 WHERE MaNXB = ?";
+        String sql = "DELETE FROM nxb WHERE MaNXB = ?";
         
         try (Connection conn = DatabaseHelper.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -82,7 +82,8 @@ public class NhaXuatBanDAO {
             ps.setString(1, maNXB);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.out.println("❌ Lỗi xóa NXB: " + e.getMessage());
+            // Nếu có lỗi này, thường là do NXB đang được liên kết với bảng SanPham (Khóa ngoại)
+            System.out.println("❌ Lỗi xóa NXB (Có thể do ràng buộc khóa ngoại): " + e.getMessage());
             return false;
         }
     }

@@ -238,11 +238,11 @@ CREATE TABLE `phieunhaphang` (
 
 CREATE TABLE `sanpham` (
   `MaSP` varchar(50) NOT NULL,
+  `HinhAnh` varchar(255) DEFAULT NULL,
   `Ten` varchar(255) DEFAULT NULL,
   `MaTG` varchar(50) DEFAULT NULL,   -- Thêm trực tiếp Mã Tác Giả
   `MaTL` varchar(50) DEFAULT NULL,   -- Thêm trực tiếp Mã Thể Loại
   `MaNXB` varchar(50) DEFAULT NULL,
-  `MaNCC` varchar(50) DEFAULT NULL,
   `SLTonKho` int(11) DEFAULT 0,
   `DonViTinh` varchar(50) DEFAULT NULL,
   `DonGia` decimal(18,2) DEFAULT NULL,
@@ -255,10 +255,10 @@ CREATE TABLE `sanpham` (
 -- Đang đổ dữ liệu cho bảng `sanpham`
 --
 
-INSERT INTO `sanpham` (`MaSP`, `Ten`, `MaTG`, `MaTL`, `MaNXB`, `MaNCC`, `SLTonKho`, `DonViTinh`, `DonGia`, `NamXB`, `MoTa`, `TrangThai`) VALUES
-('SP001', 'Mắt Biếc', 'TG001', 'TL001', 'NXB001', 'NCC001', 50, 'Cuốn', 110000.00, 2019, 'Tác phẩm nổi tiếng của Nguyễn Nhật Ánh', 1),
-('SP002', 'Dế Mèn Phiêu Lưu Ký', 'TG002', 'TL002', 'NXB002', 'NCC001', 100, 'Cuốn', 55000.00, 2020, 'Truyện thiếu nhi kinh điển', 1),
-('SP003', 'Đắc Nhân Tâm', 'TG003', 'TL003', 'NXB001', 'NCC002', 30, 'Cuốn', 86000.00, 2021, 'Sách kỹ năng hay nhất mọi thời đại', 1);
+INSERT INTO `sanpham` (`MaSP`, `Ten`, `HinhAnh`,  `MaTG`, `MaTL`, `MaNXB`, `SLTonKho`, `DonViTinh`, `DonGia`, `NamXB`, `MoTa`, `TrangThai`) VALUES
+('SP001', 'Mắt Biếc', 'mat-biec.png', 'TG001', 'TL001', 'NXB001', 50, 'Cuốn', 110000.00, 2019, 'Tác phẩm nổi tiếng của Nguyễn Nhật Ánh', 1),
+('SP002', 'Dế Mèn Phiêu Lưu Ký', 'de-men-phieu-luu-ky.jpg', 'TG002', 'TL002', 'NXB002', 100, 'Cuốn', 55000.00, 2020, 'Truyện thiếu nhi kinh điển', 1),
+('SP003', 'Đắc Nhân Tâm', 'dac-nhan-tam.jpg', 'TG003', 'TL003', 'NXB001', 30, 'Cuốn', 86000.00, 2021, 'Sách kỹ năng hay nhất mọi thời đại', 1);
 
 -- --------------------------------------------------------
 
@@ -446,8 +446,7 @@ ALTER TABLE `phieunhaphang`
 --
 ALTER TABLE `sanpham`
   ADD PRIMARY KEY (`MaSP`),
-  ADD KEY `MaNXB` (`MaNXB`),
-  ADD KEY `MaNCC` (`MaNCC`);
+  ADD KEY `MaNXB` (`MaNXB`);
 
 --
 -- Chỉ mục cho bảng `sanpham_tacgia`
@@ -532,8 +531,8 @@ ALTER TABLE `phieunhaphang`
 -- Các ràng buộc cho bảng `sanpham`
 --
 ALTER TABLE `sanpham`
-  ADD CONSTRAINT `sanpham_ibfk_1` FOREIGN KEY (`MaNXB`) REFERENCES `nxb` (`MaNXB`),
-  ADD CONSTRAINT `sanpham_ibfk_2` FOREIGN KEY (`MaNCC`) REFERENCES `ncc` (`MaNCC`);
+  ADD CONSTRAINT `sanpham_ibfk_1` FOREIGN KEY (`MaNXB`) REFERENCES `nxb` (`MaNXB`);
+  
 
 --
 -- Các ràng buộc cho bảng `sanpham_tacgia`

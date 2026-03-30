@@ -458,6 +458,8 @@ public class NhapHangController {
         boolean ok = phieuNhapBUS.taoPhieuNhap(pn, new ArrayList<>(chiTietTam));
         if (ok) {
             JOptionPane.showMessageDialog(view, "Lưu phiếu nhập thành công");
+            Backend.BUS.EventBus.publish("SAN_PHAM_CHANGED");
+            loadSanPhamCombo();
             loadPhieuNhapTable(phieuNhapBUS.getAll());
             resetForNewPhieu();
         } else {
@@ -489,6 +491,8 @@ public class NhapHangController {
         boolean ok = phieuNhapBUS.suaPhieuNhap(pn, new ArrayList<>(chiTietTam));
         if (ok) {
             JOptionPane.showMessageDialog(view, "Cập nhật phiếu nhập thành công");
+            Backend.BUS.EventBus.publish("SAN_PHAM_CHANGED");
+            loadSanPhamCombo();
             loadPhieuNhapTable(phieuNhapBUS.getAll());
             resetForNewPhieu();
         } else {
@@ -515,6 +519,8 @@ public class NhapHangController {
         boolean ok = phieuNhapBUS.xoaPhieuNhap(maPhieu);
         if (ok) {
             JOptionPane.showMessageDialog(view, "Xóa phiếu nhập thành công");
+            Backend.BUS.EventBus.publish("SAN_PHAM_CHANGED");
+            loadSanPhamCombo();
             loadPhieuNhapTable(phieuNhapBUS.getAll());
             resetForNewPhieu();
         } else {
