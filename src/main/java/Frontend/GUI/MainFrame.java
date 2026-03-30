@@ -2,9 +2,11 @@ package Frontend.GUI;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.*;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.*;
 
 import Backend.BUS.SharedData;
 import Backend.DTO.NhanVien_TaiKhoan.PhanQuyenDTO;
@@ -17,7 +19,10 @@ import Frontend.GUI.NhapHangGUI.NhapHangPanel;
 import Frontend.GUI.PhanQuyenGUI.PhanQuyenPanel;
 import Frontend.GUI.SanPhamGUI.SanPhamPanel;
 import Frontend.GUI.ThongKeGUI.ThongKePanel;
-import Frontend.GUI.TrangChuGUI.TrangChuPanel;
+import Frontend.GUI.PhanQuyenGUI.PhanQuyenPanel;
+import Frontend.GUI.NhaCungCapGUI.NhaCungCapPanel;
+import Frontend.GUI.TrangChuGUI.*;
+
 
 public class MainFrame extends JFrame {
     private CardLayout rootLayout;
