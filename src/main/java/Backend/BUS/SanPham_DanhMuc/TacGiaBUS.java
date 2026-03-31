@@ -2,7 +2,12 @@ package Backend.BUS.SanPham_DanhMuc;
 
 import Backend.DAO.SanPham_DanhMuc.TacGiaDAO;
 import Backend.DTO.SanPham_DanhMuc.TacGiaDTO;
+
+import java.io.FileInputStream;
 import java.util.ArrayList;
+
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.*;
 
 public class TacGiaBUS {
     private ArrayList<TacGiaDTO> listTG;
@@ -110,5 +115,63 @@ public class TacGiaBUS {
     public String getTenById(String maTG) {
         TacGiaDTO tg = getById(maTG);
         return (tg != null) ? (tg.getHoTG() + " " + tg.getTenTG()).trim() : "Chưa xác định";
+    }
+
+    public String nhapExcel(String filePath) {
+        int count = 0;
+        int skip = 0;
+        try (Workbook workbook = new XSSFWorkbook(new FileInputStream(filePath))) {
+            Sheet sheet = workbook.getSheetAt(0);
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) {
+                    skip++;
+                    continue;
+                }
+
+                Cell cellHo = row.getCell(0);
+                Cell cellTen = row.getCell(1);
+
+                if (cellHo == null || cellTen == null) {
+                    skip++;
+                    continue;
+                }
+
+                String hoTG = cellHo.getStringCellValue().trim();
+                String tenTG = cellTen.getStringCellValue().trim();
+
+                if (hoTG.isEmpty() || tenTG.isEmpty()) {
+                    skip++;
+                    continue;
+                }
+
+                // Kiểm tra trùng lặp dựa trên Họ và Tên (tránh nhập 1 người nhiều lần)
+                boolean isDuplicate = false;
+                for (TacGiaDTO existing : listTG) {
+                    if (existing.getHoTG().equalsIgnoreCase(hoTG) && existing.getTenTG().equalsIgnoreCase(tenTG)) {
+                        isDuplicate = true;
+                        break;
+                    }
+                }
+
+                if (!isDuplicate) {
+                    TacGiaDTO tg = new TacGiaDTO();
+                    tg.setHoTG(hoTG);
+                    tg.setTenTG(tenTG);
+                    tg.setMaTG(generateNewMaTG());
+
+                    if (tgDAO.insert(tg)) {
+                        listTG.add(tg); // Cập nhật danh sách tạm để generate mã cho dòng tiếp theo
+                        count++;
+                    }
+                } else {
+                    skip++;
+                }
+            }
+            refreshData(); // Đồng bộ lại toàn bộ dữ liệu sau khi xong
+            return "SUCCESS:" + count + ":" + skip;
+        } catch (Exception e) {
+            return "Lỗi: " + e.getMessage();
+        }
     }
 }

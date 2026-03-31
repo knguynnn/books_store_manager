@@ -2,7 +2,12 @@ package Backend.BUS.SanPham_DanhMuc;
 
 import Backend.DAO.SanPham_DanhMuc.TheLoaiDAO;
 import Backend.DTO.SanPham_DanhMuc.TheLoaiDTO;
+
+import java.io.FileInputStream;
 import java.util.ArrayList;
+
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.*;
 
 public class TheLoaiBUS {
     private ArrayList<TheLoaiDTO> listTL;
@@ -111,5 +116,61 @@ public class TheLoaiBUS {
             if (tl.getTenTL().equalsIgnoreCase(ten)) return tl.getMaTL();
         }
         return "";
+    }
+
+    public String nhapExcel(String filePath) {
+        int count = 0;
+        int skip = 0;
+        try (Workbook workbook = new XSSFWorkbook(new FileInputStream(filePath))) {
+            Sheet sheet = workbook.getSheetAt(0);
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) {
+                    skip++;
+                    continue;
+                }
+
+                // Giả sử cột 0 là Tên thể loại trong file Excel
+                Cell cellTen = row.getCell(0);
+                if (cellTen == null) {
+                    skip++;
+                    continue;
+                }
+
+                String tenTL = cellTen.getStringCellValue().trim();
+                if (tenTL.isEmpty()) {
+                    skip++;
+                    continue;
+                }
+
+                // Kiểm tra trùng lặp tên thể loại để tránh thêm mới dữ liệu đã có
+                boolean isDuplicate = false;
+                for (TheLoaiDTO existing : listTL) {
+                    if (existing.getTenTL().equalsIgnoreCase(tenTL)) {
+                        isDuplicate = true;
+                        break;
+                    }
+                }
+
+                if (!isDuplicate) {
+                    TheLoaiDTO tl = new TheLoaiDTO();
+                    tl.setTenTL(tenTL);
+                    tl.setMaTL(generateNewMaTL());
+
+                    if (tlDAO.insert(tl)) {
+                        listTL.add(tl); // Thêm vào list tạm để hàm generate mã dòng sau chính xác
+                        count++;
+                    } else {
+                        skip++;
+                    }
+                } else {
+                    skip++;
+                }
+            }
+            refreshData(); // Đồng bộ lại listTL từ Database
+            return "SUCCESS:" + count + ":" + skip;
+        } catch (Exception e) {
+            return "Lỗi: " + e.getMessage();
+        }
     }
 }

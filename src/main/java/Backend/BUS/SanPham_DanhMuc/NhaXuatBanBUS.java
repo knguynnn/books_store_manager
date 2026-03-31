@@ -3,7 +3,11 @@ package Backend.BUS.SanPham_DanhMuc;
 import Backend.DAO.SanPham_DanhMuc.NhaXuatBanDAO;
 import Backend.DTO.SanPham_DanhMuc.NhaXuatBanDTO;
 
+import java.io.FileInputStream;
 import java.util.ArrayList;
+
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.*;
 
 public class NhaXuatBanBUS {
     private ArrayList<NhaXuatBanDTO> listNXB;
@@ -126,5 +130,79 @@ public class NhaXuatBanBUS {
             if (nxb.getTenNXB().equalsIgnoreCase(ten)) return nxb.getMaNXB();
         }
         return "";
+    }
+
+    public String nhapExcel(String filePath) {
+        int count = 0;
+        int skip = 0;
+        try (Workbook workbook = new XSSFWorkbook(new FileInputStream(filePath))) {
+            Sheet sheet = workbook.getSheetAt(0);
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) {
+                    skip++;
+                    continue;
+                }
+
+                // Đọc dữ liệu từ các cột (0: Tên, 1: Địa chỉ, 2: Email, 3: SĐT)
+                Cell cellTen = row.getCell(0);
+                Cell cellDiaChi = row.getCell(1);
+                Cell cellEmail = row.getCell(2);
+                Cell cellSdt = row.getCell(3);
+
+                if (cellTen == null || cellDiaChi == null || cellEmail == null || cellSdt == null) {
+                    skip++;
+                    continue;
+                }
+
+                String tenNXB = cellTen.getStringCellValue().trim();
+                String diaChi = cellDiaChi.getStringCellValue().trim();
+                String email = cellEmail.getStringCellValue().trim();
+                String sdt = "";
+                
+                // Xử lý cột SĐT (tránh lỗi nếu định dạng trong Excel là số)
+                if (cellSdt.getCellType() == CellType.NUMERIC) {
+                    sdt = String.valueOf((long) cellSdt.getNumericCellValue());
+                } else {
+                    sdt = cellSdt.getStringCellValue().trim();
+                }
+
+                if (tenNXB.isEmpty() || diaChi.isEmpty() || email.isEmpty() || sdt.isEmpty()) {
+                    skip++;
+                    continue;
+                }
+
+                // Kiểm tra trùng tên Nhà xuất bản
+                boolean isDuplicate = false;
+                for (NhaXuatBanDTO existing : listNXB) {
+                    if (existing.getTenNXB().equalsIgnoreCase(tenNXB)) {
+                        isDuplicate = true;
+                        break;
+                    }
+                }
+
+                if (!isDuplicate) {
+                    NhaXuatBanDTO nxb = new NhaXuatBanDTO();
+                    nxb.setTenNXB(tenNXB);
+                    nxb.setDiaChi(diaChi);
+                    nxb.setEmail(email);
+                    nxb.setSoDienThoai(sdt);
+                    nxb.setMaNXB(generateNewMaNXB());
+
+                    if (nxbDAO.insert(nxb)) {
+                        listNXB.add(nxb); // Cập nhật list tạm để sinh mã cho dòng sau
+                        count++;
+                    } else {
+                        skip++;
+                    }
+                } else {
+                    skip++;
+                }
+            }
+            refreshData();
+            return "SUCCESS:" + count + ":" + skip;
+        } catch (Exception e) {
+            return "Lỗi: " + e.getMessage();
+        }
     }
 }
