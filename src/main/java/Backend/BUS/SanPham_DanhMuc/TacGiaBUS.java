@@ -111,4 +111,8 @@ public class TacGiaBUS {
         TacGiaDTO tg = getById(maTG);
         return (tg != null) ? (tg.getHoTG() + " " + tg.getTenTG()).trim() : "Chưa xác định";
     }
+
+
+
+
 }

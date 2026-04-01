@@ -87,6 +87,30 @@ public class NhaCungCapBUS {
             .collect(Collectors.toCollection(ArrayList::new));
     }
 
+    public ArrayList<NhaCungCapDTO> searchNCC(String keyword) {
+    // 1. Tạo một danh sách mới để chứa kết quả tìm được
+    ArrayList<NhaCungCapDTO> ketQua = new ArrayList<>();
+    
+    // 2. Làm sạch từ khóa (chuyển chữ thường, xóa khoảng trắng thừa)
+    String tuKhoa = keyword.toLowerCase().trim();
+
+    // 3. Duyệt qua từng nhà cung cấp trong danh sách gốc (listNCC)
+    for (NhaCungCapDTO ncc : listNCC) {
+        
+        // 4. Kiểm tra xem từ khóa có nằm trong Tên hoặc Mã không
+        String ten = ncc.getTenNCC().toLowerCase();
+        String ma = ncc.getMaNCC().toLowerCase();
+        
+        if (ten.contains(tuKhoa) || ma.contains(tuKhoa)) {
+            // 5. Nếu khớp thì thêm vào danh sách kết quả
+            ketQua.add(ncc);
+        }
+    }
+    
+    // 6. Trả về danh sách các mục đã tìm thấy
+    return ketQua;
+}
+
     public String generateNewMaNCC() {
         int maxId = 0;
         for (NhaCungCapDTO ncc : listNCC) {
@@ -153,4 +177,56 @@ public class NhaCungCapBUS {
         cell.setCellType(CellType.STRING);
         return cell.getStringCellValue();
     }
+
+
+
+
+
+
+
+
+
+public boolean themNCC (NhaCungCapDTO ncc){
+    if(!validate(ncc)) return false;
+    if(dao.insert(ncc)){
+        listNCC.add(ncc);
+        return true;
+    }
+    return false;
 }
+
+public boolean suaNCC (NhaCungCapDTO ncc){
+    if(!validate(ncc)) return false;
+    if (dao.update(ncc)){
+        for(int i=0; i < listNCC.size();i++){
+            if(listNCC.get(i).getMaNCC().equals(ncc)){
+                listNCC.set(i, ncc);
+            }
+        }return true;
+    }return false;
+}
+
+public boolean xoaNCC(String maNCC){
+    if(dao.delete(maNCC)){
+        listNCC.removeIf(ncc -> ncc.getMaNCC().equals(maNCC));
+        return true;
+    }
+    return false;
+}
+
+public ArrayList<NhaCungCapDTO> timkiem(String keyword){
+    ArrayList<NhaCungCapDTO> ketqua = new ArrayList<>();
+    String tuKhoa = keyword.toLowerCase().trim()    ;
+    for(NhaCungCapDTO ncc : listNCC){
+        String ma = ncc.getMaNCC().toLowerCase();
+        String ten = ncc.getTenNCC().toLowerCase();
+        if(ten.contains(tuKhoa) || ma.contains(tuKhoa)){
+            ketqua.add(ncc);
+        }
+        
+    }
+    return ketqua;
+}
+}
+
+

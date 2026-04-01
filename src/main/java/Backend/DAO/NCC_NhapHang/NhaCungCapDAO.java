@@ -77,4 +77,65 @@ public class NhaCungCapDAO {
             return false; 
         }
     }
+
+        // hàm tìm kiếm ở DAO
+        
+    public ArrayList<NhaCungCapDTO> search(String keyword) {
+    ArrayList<NhaCungCapDTO> list = new ArrayList<>();
+    // Dùng dấu % để tìm kiếm chứa từ khóa (tương tự contains trong Java)
+    String sql = "SELECT * FROM ncc WHERE MaNCC LIKE ? OR TenNCC LIKE ? OR SDT LIKE ?";
+    
+    try (Connection conn = DatabaseHelper.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        
+        String value = "%" + keyword + "%";
+        ps.setString(1, value);
+        ps.setString(2, value);
+        ps.setString(3, value);
+        
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new NhaCungCapDTO(
+                    rs.getString("MaNCC"),
+                    rs.getString("TenNCC"),
+                    rs.getString("SDT"),
+                    rs.getString("DiaChi"),
+                    rs.getString("Email")
+                ));
+            }
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return list;
 }
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
