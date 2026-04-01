@@ -161,23 +161,34 @@ public class SanPhamDAO {
         return maxMa;
     }
 
-    public ArrayList<SanPhamDTO> searchAdvanced(String maTG, String maTL, int maxSoLuong, long maxGia) {
+    public ArrayList<SanPhamDTO> searchAdvanced(String maTG, String maTL, int maxSoLuong, long giaThap, long giaCao) {
         ArrayList<SanPhamDTO> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT * FROM sanpham WHERE TrangThai = 1");
         
         if (maTG != null && !maTG.isEmpty()) sql.append(" AND MaTG = ?");
         if (maTL != null && !maTL.isEmpty()) sql.append(" AND MaTL = ?");
         if (maxSoLuong >= 0) sql.append(" AND SLTonKho <= ?");
-        if (maxGia >= 0) sql.append(" AND DonGia <= ?");
+
+        // Logic PHÉP OR Ở GIÁ: Ví dụ tìm sản phẩm < giaThap HOẶC > giaCao
+        if (giaThap >= 0 && giaCao >= 0) {
+            sql.append(" AND (DonGia <= ? OR DonGia >= ?)");
+        }
+
         sql.append(" ORDER BY MaSP ASC");
 
         try (Connection conn = DatabaseHelper.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            
             int idx = 1;
             if (maTG != null && !maTG.isEmpty()) ps.setString(idx++, maTG);
             if (maTL != null && !maTL.isEmpty()) ps.setString(idx++, maTL);
             if (maxSoLuong >= 0) ps.setInt(idx++, maxSoLuong);
-            if (maxGia >= 0) ps.setLong(idx++, maxGia);
+
+            // Truyền 2 tham số cho phép OR
+            if (giaThap >= 0 && giaCao >= 0) {
+                ps.setLong(idx++, giaThap);
+                ps.setLong(idx++, giaCao);
+            }
             
             ResultSet rs = ps.executeQuery();
             while (rs.next()) list.add(readResultSet(rs));
