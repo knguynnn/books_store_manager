@@ -793,7 +793,7 @@ public class SanPhamPanel extends JPanel {
 
     private void moDialogTimKiemNangCao() {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Tìm kiếm nâng cao", true);
-        dialog.setSize(420, 280);
+        dialog.setSize(420, 330); // Tăng chiều cao để đủ chỗ cho 2 dòng giá
         dialog.setLocationRelativeTo(this);
         dialog.setLayout(new BorderLayout(10, 10));
 
@@ -805,7 +805,7 @@ public class SanPhamPanel extends JPanel {
         Font fontLabel = new Font("Segoe UI", Font.BOLD, 13);
         Font fontComp  = new Font("Segoe UI", Font.PLAIN, 13);
 
-        // --- Tác giả combobox ---
+        // --- Tác giả ---
         JLabel lbTG = new JLabel("Tác giả:"); lbTG.setFont(fontLabel);
         JComboBox<String> cbTG = new JComboBox<>(); cbTG.setFont(fontComp);
         cbTG.addItem("-- Tất cả --");
@@ -815,7 +815,7 @@ public class SanPhamPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0; pnlContent.add(lbTG, gbc);
         gbc.gridx = 1; gbc.weightx = 1; pnlContent.add(cbTG, gbc);
 
-        // --- Thể loại combobox ---
+        // --- Thể loại ---
         JLabel lbTL = new JLabel("Thể loại:"); lbTL.setFont(fontLabel);
         JComboBox<String> cbTL = new JComboBox<>(); cbTL.setFont(fontComp);
         cbTL.addItem("-- Tất cả --");
@@ -825,11 +825,11 @@ public class SanPhamPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0; pnlContent.add(lbTL, gbc);
         gbc.gridx = 1; gbc.weightx = 1; pnlContent.add(cbTL, gbc);
 
-        // --- Số lượng spinner + checkbox ---
+        // --- Số lượng ---
         JLabel lbSL = new JLabel("Số lượng ≤:"); lbSL.setFont(fontLabel);
         JSpinner spnSL = new JSpinner(new SpinnerNumberModel(100, 0, 99999, 1));
         spnSL.setFont(fontComp); spnSL.setEnabled(false);
-        JCheckBox chkSL = new JCheckBox("Bật lọc"); chkSL.setFont(fontComp);
+        JCheckBox chkSL = new JCheckBox("Bật"); chkSL.setFont(fontComp);
         chkSL.addActionListener(e -> spnSL.setEnabled(chkSL.isSelected()));
 
         JPanel pnlSL = new JPanel(new BorderLayout(5, 0)); pnlSL.setOpaque(false);
@@ -838,22 +838,35 @@ public class SanPhamPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0; pnlContent.add(lbSL, gbc);
         gbc.gridx = 1; gbc.weightx = 1; pnlContent.add(pnlSL, gbc);
 
-        // --- Giá spinner + checkbox ---
-        JLabel lbGiaAdv = new JLabel("Giá ≤:"); lbGiaAdv.setFont(fontLabel);
-        JSpinner spnGia = new JSpinner(new SpinnerNumberModel(200000, 0, 99999999, 1000));
-        spnGia.setFont(fontComp); spnGia.setEnabled(false);
-        JCheckBox chkGia = new JCheckBox("Bật lọc"); chkGia.setFont(fontComp);
-        chkGia.addActionListener(e -> spnGia.setEnabled(chkGia.isSelected()));
+        // --- GIÁ THẤP (Mức 1) ---
+        JLabel lbGiaThap = new JLabel("Giá ≤:"); lbGiaThap.setFont(fontLabel);
+        JSpinner spnGiaThap = new JSpinner(new SpinnerNumberModel(50000, 0, 99999999, 1000));
+        spnGiaThap.setFont(fontComp); spnGiaThap.setEnabled(false);
+        JCheckBox chkGiaThap = new JCheckBox("Bật"); chkGiaThap.setFont(fontComp);
+        chkGiaThap.addActionListener(e -> spnGiaThap.setEnabled(chkGiaThap.isSelected()));
 
-        JPanel pnlGiaAdv = new JPanel(new BorderLayout(5, 0)); pnlGiaAdv.setOpaque(false);
-        pnlGiaAdv.add(spnGia, BorderLayout.CENTER); pnlGiaAdv.add(chkGia, BorderLayout.EAST);
+        JPanel pnlGiaThap = new JPanel(new BorderLayout(5, 0)); pnlGiaThap.setOpaque(false);
+        pnlGiaThap.add(spnGiaThap, BorderLayout.CENTER); pnlGiaThap.add(chkGiaThap, BorderLayout.EAST);
 
-        gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0; pnlContent.add(lbGiaAdv, gbc);
-        gbc.gridx = 1; gbc.weightx = 1; pnlContent.add(pnlGiaAdv, gbc);
+        gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0; pnlContent.add(lbGiaThap, gbc);
+        gbc.gridx = 1; gbc.weightx = 1; pnlContent.add(pnlGiaThap, gbc);
+
+        // --- GIÁ CAO (Mức 2 - Logic OR) ---
+        JLabel lbGiaCao = new JLabel("Hoặc Giá ≥:"); lbGiaCao.setFont(fontLabel);
+        JSpinner spnGiaCao = new JSpinner(new SpinnerNumberModel(500000, 0, 99999999, 1000));
+        spnGiaCao.setFont(fontComp); spnGiaCao.setEnabled(false);
+        JCheckBox chkGiaCao = new JCheckBox("Bật"); chkGiaCao.setFont(fontComp);
+        chkGiaCao.addActionListener(e -> spnGiaCao.setEnabled(chkGiaCao.isSelected()));
+
+        JPanel pnlGiaCao = new JPanel(new BorderLayout(5, 0)); pnlGiaCao.setOpaque(false);
+        pnlGiaCao.add(spnGiaCao, BorderLayout.CENTER); pnlGiaCao.add(chkGiaCao, BorderLayout.EAST);
+
+        gbc.gridx = 0; gbc.gridy = 4; gbc.weightx = 0; pnlContent.add(lbGiaCao, gbc);
+        gbc.gridx = 1; gbc.weightx = 1; pnlContent.add(pnlGiaCao, gbc);
 
         dialog.add(pnlContent, BorderLayout.CENTER);
 
-        // --- Nút ---
+        // --- Các nút chức năng ---
         JPanel pnlBot = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         JButton btnHuy = new JButton("Hủy"); btnHuy.setFont(fontComp);
         JButton btnTim = new JButton("🔍 Tìm kiếm");
@@ -871,10 +884,15 @@ public class SanPhamPanel extends JPanel {
             if (cbTL.getSelectedIndex() > 0)
                 maTL = cbTL.getSelectedItem().toString().split(" - ")[0].trim();
 
-            int targetSL   = chkSL.isSelected()  ? (int) spnSL.getValue() : -1;
-            long targetGia = chkGia.isSelected() ? ((Number) spnGia.getValue()).longValue() : -1L;
+            int targetSL = chkSL.isSelected() ? (int) spnSL.getValue() : -1;
+            
+            // Lấy 2 mốc giá từ 2 spinner
+            long targetGiaThap = chkGiaThap.isSelected() ? ((Number) spnGiaThap.getValue()).longValue() : -1L;
+            long targetGiaCao  = chkGiaCao.isSelected() ? ((Number) spnGiaCao.getValue()).longValue() : -1L;
 
-            ArrayList<SanPhamDTO> ketQua = spBUS.searchAdvanced(maTG, maTL, targetSL, targetGia);
+            // GỌI HÀM BUS VỚI 5 THAM SỐ (maTG, maTL, sl, giaThap, giaCao)
+            ArrayList<SanPhamDTO> ketQua = spBUS.searchAdvanced(maTG, maTL, targetSL, targetGiaThap, targetGiaCao);
+            
             model.setRowCount(0);
             for (SanPhamDTO sp : ketQua) {
                 model.addRow(new Object[]{
@@ -882,11 +900,10 @@ public class SanPhamPanel extends JPanel {
                     sp.getTenSP(),
                     tgBUS.getTenById(sp.getMaTG()),
                     tlBUS.getTenById(sp.getMaTL()),
-                    sp.getDonGia(), // Lấy Giá Bán từ DB
+                    sp.getDonGia(),
                     sp.getSoLuongTon()
                 });
             }
-
             dialog.dispose();
         });
         dialog.setVisible(true);
