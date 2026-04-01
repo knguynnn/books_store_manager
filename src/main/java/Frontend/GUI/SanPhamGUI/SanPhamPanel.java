@@ -566,28 +566,38 @@ public class SanPhamPanel extends JPanel {
     }
 
     private void nhapDuLieuExcel() {
+        String mode = (String) cbMode.getSelectedItem(); // Lấy mode hiện tại: "Tác giả", "Thể loại"...
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Excel Files", "xlsx", "xls"));
-        
+
         if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
-            
-            String result = spBUS.nhapExcel(file.getAbsolutePath());
-            
+            String filePath = file.getAbsolutePath();
+            String result = "";
+
+            // Kiểm tra xem đang ở Mode nào để gọi BUS đó
+            switch (mode) {
+                case "Tác giả":
+                    result = tgBUS.nhapExcel(filePath);
+                    break;
+                case "Thể loại":
+                    result = tlBUS.nhapExcel(filePath);
+                    break;
+                case "Nhà xuất bản":
+                    result = nxbBUS.nhapExcel(filePath);
+                    break;
+                case "Sản phẩm":
+                    result = spBUS.nhapExcel(filePath);
+                    break;
+            }
+
             if (result != null && result.startsWith("SUCCESS")) {
                 String[] parts = result.split(":");
-                int success = Integer.parseInt(parts[1]);
-                int skip = Integer.parseInt(parts[2]);
-                
                 JOptionPane.showMessageDialog(this, 
-                    "Nhập thành công: " + success + " dòng.\nBỏ qua: " + skip + " dòng (lỗi/trống).", 
-                    "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                    
-                refreshTable(); 
+                    "Nhập " + mode + " thành công: " + parts[1] + " dòng.");
+                refreshTable(); // Làm mới lại bảng đang hiển thị
             } else {
-                JOptionPane.showMessageDialog(this, 
-                    "Lỗi nhập Excel: " + result, 
-                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Lỗi: " + result, "Thông báo", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
