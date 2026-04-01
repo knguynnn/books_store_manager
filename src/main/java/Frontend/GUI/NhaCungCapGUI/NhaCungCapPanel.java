@@ -1,20 +1,25 @@
 package Frontend.GUI.NhaCungCapGUI;
 
 import Frontend.Compoent.*;
+import Backend.BUS.NCC_NhapHang.NhaCungCapBUS;
+import Backend.DTO.NCC_NhapHang.NhaCungCapDTO;
+
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.table.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.io.File;
+import java.util.ArrayList;
 
 public class NhaCungCapPanel extends JPanel {
-    private Table tableNCC;
+    private NhaCungCapBUS bus = new NhaCungCapBUS();
+    private Frontend.Compoent.Table tableNCC;
     private DefaultTableModel modelNCC;
-
     private SearchTextField txtTimKiem;
     private CustomButton btnTim;
-
     private InfoField txtMaNCC, txtTenNCC, txtSDT, txtDiaChi, txtEmail;
-
     private ButtonAdd btnThem;
     private ButtonFix btnSua;
     private ButtonDele btnXoa;
@@ -22,243 +27,188 @@ public class NhaCungCapPanel extends JPanel {
     private ButtonNhapExcel btnNhap;
     private ButtonXuatExcel btnXuat;
 
+    // Định nghĩa màu đồng nhất với nút Tìm
+    private final Color PRIMARY_COLOR = new Color(15, 25, 45);
+
     public NhaCungCapPanel() {
         setLayout(new BorderLayout());
         setBackground(Theme.BACKGROUND);
 
-        JLabel lblTitle = new JLabel("  QUẢN LÝ NHÀ CUNG CẤP");
+        JLabel lblTitle = new JLabel("  QUẢN LÝ NHÀ CUNG CẤP", JLabel.LEFT);
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        lblTitle.setForeground(Theme.TEXT);
-        lblTitle.setPreferredSize(new Dimension(0, 45));
-        lblTitle.setOpaque(true);
-        lblTitle.setBackground(Theme.BACKGROUND);
+        lblTitle.setPreferredSize(new Dimension(0, 50));
         add(lblTitle, BorderLayout.NORTH);
 
         JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        mainSplit.setDividerLocation(330);
-        mainSplit.setResizeWeight(0.0);
-        mainSplit.setBorder(null);
-
+        mainSplit.setDividerLocation(350);
         mainSplit.setLeftComponent(createLeftFormPanel());
         mainSplit.setRightComponent(createRightTablePanel());
-
         add(mainSplit, BorderLayout.CENTER);
 
         initEvents();
+        loadData(bus.getAll());
+        setNewMaNCC();
     }
 
     private JPanel createLeftFormPanel() {
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.setBackground(Color.WHITE);
-        wrapper.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, Theme.BORDER));
-
-        JLabel lblFormTitle = new JLabel("  THÔNG TIN NHÀ CUNG CẤP");
-        lblFormTitle.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        lblFormTitle.setForeground(Theme.TEXT);
-        lblFormTitle.setPreferredSize(new Dimension(0, 35));
-        lblFormTitle.setOpaque(true);
-        lblFormTitle.setBackground(Color.WHITE);
-        wrapper.add(lblFormTitle, BorderLayout.NORTH);
-
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBackground(Color.WHITE);
-        formPanel.setBorder(new EmptyBorder(10, 15, 10, 15));
-
+        formPanel.setBorder(new EmptyBorder(20, 15, 20, 15));
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 0, 5, 5);
-        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.NORTH;
+        
+        int r = 0;
+        addFormRow(formPanel, gbc, r++, "Mã NCC:", txtMaNCC = new InfoField(""), 15);
+        txtMaNCC.setEditable(false); 
+        addFormRow(formPanel, gbc, r++, "Tên NCC:", txtTenNCC = new InfoField(""), 15);
+        addFormRow(formPanel, gbc, r++, "SĐT:", txtSDT = new InfoField(""), 15);
+        addFormRow(formPanel, gbc, r++, "Địa chỉ:", txtDiaChi = new InfoField(""), 15);
+        addFormRow(formPanel, gbc, r++, "Email:", txtEmail = new InfoField(""), 15);
 
-        int row = 0;
-
-        addFormRow(formPanel, gbc, row++, "Mã NCC:", txtMaNCC = new InfoField(""));
-        txtMaNCC.setEditable(false);
-
-        addFormRow(formPanel, gbc, row++, "Tên NCC:", txtTenNCC = new InfoField(""));
-        txtTenNCC.setEditable(true);
-
-        addFormRow(formPanel, gbc, row++, "SĐT:", txtSDT = new InfoField(""));
-        txtSDT.setEditable(true);
-
-        addFormRow(formPanel, gbc, row++, "Địa chỉ:", txtDiaChi = new InfoField(""));
-        txtDiaChi.setEditable(true);
-
-        addFormRow(formPanel, gbc, row++, "Email:", txtEmail = new InfoField(""));
-        txtEmail.setEditable(true);
-
-        gbc.gridx = 0; gbc.gridy = row; gbc.weighty = 1.0;
-        formPanel.add(Box.createVerticalGlue(), gbc);
-
-        JScrollPane formScroll = new JScrollPane(formPanel);
-        formScroll.setBorder(null);
-        formScroll.getVerticalScrollBar().setUnitIncrement(16);
-        wrapper.add(formScroll, BorderLayout.CENTER);
-
+        gbc.gridy = r++; gbc.weighty = 1.0;
+        formPanel.add(new JLabel(""), gbc);
+        wrapper.add(formPanel, BorderLayout.CENTER);
         wrapper.add(createButtonPanel(), BorderLayout.SOUTH);
-
         return wrapper;
     }
 
-    private void addFormRow(JPanel panel, GridBagConstraints gbc, int row,
-                            String labelText, InfoField field) {
-        gbc.gridx = 0; gbc.gridy = row;
-        gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
-        gbc.gridwidth = 1;
-        gbc.insets = new Insets(5, 0, 5, 5);
-        panel.add(createFormLabel(labelText), gbc);
-
-        gbc.gridx = 1; gbc.weightx = 1.0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        field.setPreferredSize(new Dimension(0, 35));
-        panel.add(field, gbc);
+    private void addFormRow(JPanel p, GridBagConstraints gbc, int row, String lbl, InfoField field, int bottom) {
+        gbc.gridy = row; gbc.insets = new Insets(0, 0, bottom, 0);
+        gbc.gridx = 0; gbc.weightx = 0.3; p.add(new JLabel(lbl), gbc);
+        gbc.gridx = 1; gbc.weightx = 0.7; field.setEditable(true); p.add(field, gbc);
     }
 
     private JPanel createButtonPanel() {
-        JPanel panel = new JPanel(new GridLayout(2, 3, 8, 8));
-        panel.setBackground(Color.WHITE);
-        panel.setBorder(new EmptyBorder(10, 15, 15, 15));
-
+        JPanel p = new JPanel(new GridLayout(3, 2, 8, 8));
+        p.setBackground(Color.WHITE);
+        p.setBorder(new EmptyBorder(10, 10, 10, 10));
         btnThem = new ButtonAdd("Thêm");
         btnSua = new ButtonFix("Sửa");
         btnXoa = new ButtonDele("Xóa");
         btnMoi = new ButtonRefresh("Mới");
-        btnNhap = new ButtonNhapExcel("Nhập");
-        btnXuat = new ButtonXuatExcel("Xuất");
-
-        panel.add(btnThem);
-        panel.add(btnSua);
-        panel.add(btnXoa);
-        panel.add(btnMoi);
-        panel.add(btnNhap);
-        panel.add(btnXuat);
-
-        return panel;
+        btnNhap = new ButtonNhapExcel("Nhập Excel");
+        btnXuat = new ButtonXuatExcel("Xuất Excel");
+        p.add(btnThem); p.add(btnSua); p.add(btnXoa); p.add(btnMoi); p.add(btnNhap); p.add(btnXuat);
+        return p;
     }
 
     private JPanel createRightTablePanel() {
-        JPanel panel = new JPanel(new BorderLayout(0, 5));
-        panel.setBackground(Color.WHITE);
-        panel.setBorder(new EmptyBorder(0, 5, 5, 5));
-
-        JPanel searchPanel = new JPanel(new BorderLayout(8, 0));
-        searchPanel.setBackground(Color.WHITE);
-        searchPanel.setBorder(new EmptyBorder(8, 10, 8, 10));
-
-        JLabel lblTK = new JLabel("Tìm kiếm:");
-        lblTK.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        lblTK.setForeground(Theme.TEXT);
-        searchPanel.add(lblTK, BorderLayout.WEST);
-
-        txtTimKiem = new SearchTextField("Nhập mã, tên NCC, SĐT...");
-        searchPanel.add(txtTimKiem, BorderLayout.CENTER);
-
-        btnTim = new CustomButton("Tìm", Theme.PRIMARY);
-        btnTim.setPreferredSize(new Dimension(70, 35));
-        searchPanel.add(btnTim, BorderLayout.EAST);
-
-        panel.add(searchPanel, BorderLayout.NORTH);
-
-        JPanel tablePanel = new JPanel(new BorderLayout());
-        tablePanel.setBackground(Color.WHITE);
-
-        String[] cols = {"Mã NCC", "Tên NCC", "SĐT", "Địa chỉ", "Email"};
-        modelNCC = new DefaultTableModel(cols, 0) {
-            @Override
-            public boolean isCellEditable(int r, int c) { return false; }
+        JPanel p = new JPanel(new BorderLayout(5, 5));
+        p.setBackground(Color.WHITE);
+        
+        JPanel searchBox = new JPanel(new BorderLayout(5, 5));
+        searchBox.setBackground(Color.WHITE);
+        searchBox.setBorder(new EmptyBorder(0, 0, 5, 0));
+        
+        txtTimKiem = new SearchTextField("Nhập mã, tên hoặc SĐT để tìm...");
+        btnTim = new CustomButton("Tìm", PRIMARY_COLOR); 
+        btnTim.setForeground(Color.WHITE);
+        btnTim.setPreferredSize(new Dimension(100, 35));
+        
+        searchBox.add(txtTimKiem, BorderLayout.CENTER);
+        searchBox.add(btnTim, BorderLayout.EAST);
+        p.add(searchBox, BorderLayout.NORTH);
+        
+        tableNCC = new Frontend.Compoent.Table();
+        modelNCC = new DefaultTableModel(new String[]{"Mã NCC", "Tên NCC", "SĐT", "Địa chỉ", "Email"}, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
         };
-        tableNCC = new Table();
         tableNCC.setModel(modelNCC);
 
-        JScrollPane sp = new JScrollPane(tableNCC);
-        sp.setBorder(BorderFactory.createLineBorder(Theme.BORDER));
-        tablePanel.add(sp, BorderLayout.CENTER);
+        // --- PHẦN THÊM MÀU CHO DÒNG TIÊU ĐỀ (HEADER) ---
+        JTableHeader header = tableNCC.getTableHeader();
+        header.setBackground(PRIMARY_COLOR); // Màu xanh đen giống nút Tìm
+        header.setForeground(Color.WHITE);   // Chữ trắng cho dễ đọc
+        header.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        header.setReorderingAllowed(false);  // Không cho kéo đổi thứ tự cột
+        // -----------------------------------------------
 
-        panel.add(tablePanel, BorderLayout.CENTER);
-
-        return panel;
+        p.add(new JScrollPane(tableNCC), BorderLayout.CENTER);
+        return p;
     }
 
     private void initEvents() {
+        txtTimKiem.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { performSearch(); }
+            @Override public void removeUpdate(DocumentEvent e) { performSearch(); }
+            @Override public void changedUpdate(DocumentEvent e) { performSearch(); }
+        });
+
         tableNCC.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                int row = tableNCC.getSelectedRow();
-                if (row >= 0) {
-                    txtMaNCC.setText(val(row, 0));
-                    txtTenNCC.setText(val(row, 1));
-                    txtSDT.setText(val(row, 2));
-                    txtDiaChi.setText(val(row, 3));
-                    txtEmail.setText(val(row, 4));
+            int row = tableNCC.getSelectedRow();
+            if (row >= 0) {
+                txtMaNCC.setText(val(row, 0)); txtTenNCC.setText(val(row, 1));
+                txtSDT.setText(val(row, 2)); txtDiaChi.setText(val(row, 3));
+                txtEmail.setText(val(row, 4)); btnThem.setEnabled(false); 
+            }
+        });
+
+        btnThem.addActionListener(e -> {
+            if (bus.addNCC(getFormData())) {
+                JOptionPane.showMessageDialog(this, "Thêm thành công!");
+                refreshUI();
+            }
+        });
+
+        btnSua.addActionListener(e -> {
+            if (tableNCC.getSelectedRow() < 0) {
+                JOptionPane.showMessageDialog(this, "Chọn NCC cần sửa!");
+                return;
+            }
+            if (bus.updateNCC(getFormData())) {
+                JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
+                refreshUI();
+            }
+        });
+
+        btnXoa.addActionListener(e -> {
+            int row = tableNCC.getSelectedRow();
+            if (row < 0) return;
+            if (JOptionPane.showConfirmDialog(this, "Xác nhận xóa?", "Xác nhận", 0) == 0) {
+                if (bus.deleteNCC(val(row, 0))) refreshUI();
+            }
+        });
+
+        btnMoi.addActionListener(e -> refreshUI());
+
+        btnXuat.addActionListener(e -> {
+            JFileChooser chooser = new JFileChooser();
+            if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+                File f = chooser.getSelectedFile();
+                if (!f.getName().endsWith(".xlsx")) f = new File(f.getAbsolutePath() + ".xlsx");
+                if (bus.exportExcel(f)) JOptionPane.showMessageDialog(this, "Xuất thành công!");
+            }
+        });
+
+        btnNhap.addActionListener(e -> {
+            JFileChooser chooser = new JFileChooser();
+            if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                int count = bus.importExcel(chooser.getSelectedFile());
+                if (count >= 0) {
+                    JOptionPane.showMessageDialog(this, "Đã nhập thành công " + count + " NCC!");
+                    refreshUI();
                 }
             }
         });
     }
 
-    private String val(int row, int col) {
-        Object v = modelNCC.getValueAt(row, col);
-        return v != null ? v.toString() : "";
+    private void performSearch() { loadData(bus.search(txtTimKiem.getText().trim())); }
+    private void loadData(ArrayList<NhaCungCapDTO> list) {
+        modelNCC.setRowCount(0);
+        for (NhaCungCapDTO ncc : list) modelNCC.addRow(new Object[]{ncc.getMaNCC(), ncc.getTenNCC(), ncc.getSdt(), ncc.getDiaChi(), ncc.getEmail()});
     }
-
-    public boolean validateNCC() {
-        if (txtTenNCC.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Tên NCC không được để trống!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            txtTenNCC.requestFocus();
-            return false;
-        }
-        if (txtSDT.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "SĐT không được để trống!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            txtSDT.requestFocus();
-            return false;
-        }
-        String sdt = txtSDT.getText().trim();
-        if (!sdt.matches("\\d{10,11}")) {
-            JOptionPane.showMessageDialog(this, "SĐT phải là 10-11 chữ số!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            txtSDT.requestFocus();
-            return false;
-        }
-        if (txtDiaChi.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Địa chỉ không được để trống!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            txtDiaChi.requestFocus();
-            return false;
-        }
-        String email = txtEmail.getText().trim();
-        if (!email.isEmpty() && !email.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
-            JOptionPane.showMessageDialog(this, "Email không hợp lệ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            txtEmail.requestFocus();
-            return false;
-        }
-        return true;
+    private void refreshUI() {
+        bus.refreshData(); loadData(bus.getAll());
+        resetForm(); setNewMaNCC(); btnThem.setEnabled(true);
     }
-
-    public void resetForm() {
-        txtMaNCC.setText("");
-        txtTenNCC.setText("");
-        txtSDT.setText("");
-        txtDiaChi.setText("");
-        txtEmail.setText("");
-        txtTimKiem.setText("");
+    private void resetForm() {
+        txtTenNCC.setText(""); txtSDT.setText(""); txtDiaChi.setText(""); txtEmail.setText("");
         tableNCC.clearSelection();
     }
-
-    private JLabel createFormLabel(String text) {
-        JLabel label = new JLabel(text);
-        label.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        label.setForeground(Theme.TEXT);
-        label.setPreferredSize(new Dimension(80, 35));
-        return label;
-    }
-
-    public Table getTableNCC() { return tableNCC; }
-    public DefaultTableModel getModelNCC() { return modelNCC; }
-    public SearchTextField getTxtTimKiem() { return txtTimKiem; }
-    public CustomButton getBtnTim() { return btnTim; }
-    public InfoField getTxtMaNCC() { return txtMaNCC; }
-    public InfoField getTxtTenNCC() { return txtTenNCC; }
-    public InfoField getTxtSDT() { return txtSDT; }
-    public InfoField getTxtDiaChi() { return txtDiaChi; }
-    public InfoField getTxtEmail() { return txtEmail; }
-    public ButtonAdd getBtnThem() { return btnThem; }
-    public ButtonFix getBtnSua() { return btnSua; }
-    public ButtonDele getBtnXoa() { return btnXoa; }
-    public ButtonRefresh getBtnMoi() { return btnMoi; }
-    public ButtonNhapExcel getBtnNhap() { return btnNhap; }
-    public ButtonXuatExcel getBtnXuat() { return btnXuat; }
+    private void setNewMaNCC() { txtMaNCC.setText(bus.generateNewMaNCC()); }
+    private NhaCungCapDTO getFormData() { return new NhaCungCapDTO(txtMaNCC.getText(), txtTenNCC.getText(), txtSDT.getText(), txtDiaChi.getText(), txtEmail.getText()); }
+    private String val(int r, int c) { return modelNCC.getValueAt(r, c).toString(); }
 }

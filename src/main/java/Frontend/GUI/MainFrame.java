@@ -1,15 +1,28 @@
 package Frontend.GUI;
 
-import Frontend.Compoent.Theme;
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.*;
 
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.*;
+
+import Backend.BUS.SharedData;
+import Backend.DTO.NhanVien_TaiKhoan.PhanQuyenDTO;
+import Frontend.Compoent.Theme;
+import Frontend.GUI.BanHangGUI.BanHangPanel;
 import Frontend.GUI.KhachHangGUI.KhachHangPanel;
+import Frontend.GUI.NhaCungCapGUI.NhaCungCapPanel;
 import Frontend.GUI.NhanVienGUI.NhanVienPanel;
+import Frontend.GUI.NhapHangGUI.NhapHangPanel;
+import Frontend.GUI.PhanQuyenGUI.PhanQuyenPanel;
 import Frontend.GUI.SanPhamGUI.SanPhamPanel;
-import Frontend.GUI.TrangChuGUI.TrangChuPanel;
 import Frontend.GUI.ThongKeGUI.ThongKePanel;
 import Frontend.GUI.PhanQuyenGUI.PhanQuyenPanel;
+import Frontend.GUI.NhaCungCapGUI.NhaCungCapPanel;
+import Frontend.GUI.TrangChuGUI.*;
+
 
 public class MainFrame extends JFrame {
     private CardLayout rootLayout;
@@ -22,6 +35,45 @@ public class MainFrame extends JFrame {
 
     public MainFrame() {
         initComponent();
+    }
+
+    public void showCard(String name) {
+        contentLayout.show(contentArea, name);
+        header.setTitle(name);
+    }
+
+    public void showMainApp() {
+        rootLayout.show(rootPanel, "APP_VIEW");
+    }
+
+    public void showHome() {
+        rootLayout.show(rootPanel, "HOME_VIEW");
+    }
+
+    /**
+     * Chuyển sang màn hình quản lý và hiện đúng tab
+     */
+    public void switchView(String name) {
+        showMainApp();
+        showCard(name);
+        sidebar.setMenuSelected(name);
+    }
+
+    /**
+     * Quay về trang chủ (HOME_VIEW)
+     */
+    public void backToHome() {
+        rootLayout.show(rootPanel, "HOME_VIEW");
+    }
+
+    /**
+     * Áp dụng phân quyền từ SharedData sau khi đăng nhập
+     */
+    public void applyPermissions() {
+        PhanQuyenDTO quyen = SharedData.quyenHienTai;
+        if (quyen != null && sidebar != null) {
+            sidebar.applyPermissions(quyen);
+        }
     }
 
     private void initComponent() {
@@ -39,7 +91,7 @@ public class MainFrame extends JFrame {
 
         // --- MÀN HÌNH 2: GIAO DIỆN QUẢN LÝ CHÍNH ---
         JPanel pnlApp = new JPanel(new BorderLayout());
-        
+
         // Sidebar bên trái
         sidebar = new Sidebar(this);
         pnlApp.add(sidebar, BorderLayout.WEST);
@@ -52,73 +104,23 @@ public class MainFrame extends JFrame {
         contentLayout = new CardLayout();
         contentArea = new JPanel(contentLayout);
         contentArea.setBackground(Theme.BACKGROUND);
-        
-        // --- ĐĂNG KÝ CÁC TRANG NGHIỆP VỤ ---
-        
-        // 1. Trang Khách hàng (Sử dụng Panel thực tế bạn đang làm)
-        contentArea.add(new KhachHangPanel(), "Khách hàng");
-        
-        // 1.2 Trang Nhân viên
-        contentArea.add(new NhanVienPanel(), "Nhân viên");
-        
-        contentArea.add(new SanPhamPanel(), "Sản phẩm");
-        //1.5 thống kê 
-        contentArea.add(new ThongKePanel(), "Thống kê");
 
-        //1.6 Trang Phân Quyền 
+        // --- ĐĂNG KÝ TẤT CẢ CÁC TRANG NGHIỆP VỤ THỰC TẾ ---
+        contentArea.add(new BanHangPanel(), "Bán hàng");
+        contentArea.add(new SanPhamPanel(), "Sản phẩm");
+        contentArea.add(new NhapHangPanel(), "Nhập hàng");
+        contentArea.add(new KhachHangPanel(), "Khách hàng");
+        contentArea.add(new NhaCungCapPanel(), "Nhà cung cấp");
+        contentArea.add(new NhanVienPanel(), "Nhân viên");
+        contentArea.add(new ThongKePanel(), "Thống kê");
         contentArea.add(new PhanQuyenPanel(), "Phân quyền");
-        
-        // 2. Đăng ký các trang khác dưới dạng Placeholder
-        String[] pages = {"Bán hàng", "Nhập hàng", "Nhà cung cấp"};
-        for (String page : pages) {
-            JPanel pnlPlaceholder = new JPanel(new GridBagLayout());
-            pnlPlaceholder.setBackground(Theme.BACKGROUND);
-            JLabel lbl = new JLabel("GIAO DIỆN TRANG: " + page.toUpperCase());
-            lbl.setFont(new Font("Segoe UI", Font.ITALIC, 20));
-            pnlPlaceholder.add(lbl);
-            contentArea.add(pnlPlaceholder, page);
-        }
-        
+
         pnlRight.add(contentArea, BorderLayout.CENTER);
         pnlApp.add(pnlRight, BorderLayout.CENTER);
 
-        // Thêm giao diện chính vào Root
-        rootPanel.add(pnlApp, "MAIN_VIEW");
-        
-        add(rootPanel);
-        
-        // Luôn hiển thị Trang chủ đầu tiên khi mở máy
+        rootPanel.add(pnlApp, "APP_VIEW");
+
+        setContentPane(rootPanel);
         rootLayout.show(rootPanel, "HOME_VIEW");
     }
-
-    /**
-     * Chuyển từ Trang chủ vào các trang nghiệp vụ (không hiệu ứng)
-     */
-    public void switchView(String businessName) {
-        rootLayout.show(rootPanel, "MAIN_VIEW");
-        showCard(businessName);
-        sidebar.setMenuSelected(businessName);
-    }
-
-    /**
-     * Chuyển đổi giữa các trang con trong vùng Content
-     */
-    public void showCard(String name) {
-        contentLayout.show(contentArea, name);
-        header.setTitle(name.toUpperCase());
-    }
-
-    /**
-     * Quay lại màn hình Trang chủ (Portal)
-     */
-    public void backToHome() {
-        rootLayout.show(rootPanel, "HOME_VIEW");
-    }
-
-    public void applyPermissions() {
-    // Gọi hàm lọc của Sidebar bằng dữ liệu từ bộ nhớ tạm SharedData
-    if (Backend.BUS.SharedData.quyenHienTai != null) {
-        sidebar.applyPermissions(Backend.BUS.SharedData.quyenHienTai);
-    }
-}
 }
