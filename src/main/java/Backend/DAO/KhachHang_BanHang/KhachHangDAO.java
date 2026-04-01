@@ -10,7 +10,7 @@ public class KhachHangDAO {
     // Lấy tất cả khách hàng còn hoạt động
     public ArrayList<KhachHangDTO> getAll() {
         ArrayList<KhachHangDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM khachhang ORDER BY MaKH"; // Bỏ WHERE để lấy tất cả
+        String sql = "SELECT * FROM khachhang ORDER BY MaKH"; 
         
         try (Connection conn = DatabaseHelper.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -21,7 +21,7 @@ public class KhachHangDAO {
                     rs.getString("MaKH"),
                     rs.getString("HoKH"),
                     rs.getString("TenKH"),
-                    rs.getString("DChi"),  // Lưu ý: Tên cột là DChi, không phải DiaChi
+                    rs.getString("DChi"), 
                     rs.getString("Email"),
                     rs.getString("SDT"),
                     rs.getBoolean("TrangThai")
@@ -65,7 +65,6 @@ public class KhachHangDAO {
     
     // Thêm khách hàng mới
     public boolean insert(KhachHangDTO kh) {
-        // Sửa: DiaChi → DChi
         String sql = "INSERT INTO khachhang (MaKH, HoKH, TenKH, DChi, Email, SDT, TrangThai) VALUES (?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = DatabaseHelper.getConnection();

@@ -4,10 +4,18 @@ import Backend.DatabaseHelper;
 import Backend.DAO.KhachHang_BanHang.*;
 import Backend.DTO.KhachHang_BanHang.KhachHangDTO;
 
+import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
+
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class KhachHangBUS {
     private ArrayList<KhachHangDTO> listKH;
@@ -119,6 +127,63 @@ public class KhachHangBUS {
         } catch (SQLException e) {
             System.out.println("❌ Lỗi khôi phục khách hàng: " + e.getMessage());
             return false;
+        }
+    }
+
+
+    public void exportToExcel(OutputStream out) throws Exception {
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("KhachHang");
+            
+            // Tạo header
+            String[] titles = {"Mã KH", "Họ", "Tên", "Địa chỉ", "Email", "SĐT"};
+            Row header = sheet.createRow(0);
+            for(int i=0; i<titles.length; i++) {
+                Cell cell = header.createCell(i);
+                cell.setCellValue(titles[i]);
+                // Format tiêu đề đậm
+                CellStyle style = workbook.createCellStyle();
+                Font font = workbook.createFont();
+                font.setBold(true);
+                style.setFont(font);
+                cell.setCellStyle(style);
+            }
+
+            // Đổ dữ liệu
+            int rowIdx = 1;
+            for (KhachHangDTO kh : getActiveOnly()) {
+                Row row = sheet.createRow(rowIdx++);
+                row.createCell(0).setCellValue(kh.getMaKH());
+                row.createCell(1).setCellValue(kh.getHoKH());
+                row.createCell(2).setCellValue(kh.getTenKH());
+                row.createCell(3).setCellValue(kh.getDiaChi());
+                row.createCell(4).setCellValue(kh.getEmail());
+                row.createCell(5).setCellValue(kh.getSoDienThoai());
+            }
+            workbook.write(out);
+        }
+    }
+
+    // 2. Nhập file Excel 
+    public void importFromExcel(InputStream is) throws Exception {
+        try (Workbook workbook = new XSSFWorkbook(is)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+                
+                KhachHangDTO kh = new KhachHangDTO();
+                // Đọc dữ liệu từ các cột (0: Mã, 1: Họ, 2: Tên, 3: Địa chỉ, 4: Email, 5: SĐT)
+                kh.setMaKH(row.getCell(0).getStringCellValue());
+                kh.setHoKH(row.getCell(1).getStringCellValue());
+                kh.setTenKH(row.getCell(2).getStringCellValue());
+                kh.setDiaChi(row.getCell(3).getStringCellValue());
+                kh.setEmail(row.getCell(4).getStringCellValue());
+                kh.setSoDienThoai(row.getCell(5).getStringCellValue());
+                kh.setTrangThai(true);
+                
+                addKhachHang(kh); // Lưu vào Database
+            }
         }
     }
 }
