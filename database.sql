@@ -260,10 +260,10 @@ INSERT INTO `sanpham` (`MaSP`, `HinhAnh`, `Ten`, `MaTG`, `MaTL`, `MaNXB`,`SLTonK
 ('SP001', 'mat-biec.png', 'Mắt Biếc', 'TG001', 'TL001', 'NXB001', 19, 'Cuốn', 110000.00, 10, 2019, 'Tác phẩm nổi tiếng của Nguyễn Nhật Ánh', 1),
 ('SP002', 'de-men-phieu-luu-ky.jpg', 'Dế Mèn Phiêu Lưu Ký', 'TG002', 'TL002', 'NXB002', 14, 'Cuốn',  55000.00, 10, 2020, 'Truyện thiếu nhi kinh điển', 1),
 ('SP003', 'dac-nhan-tam.jpg', 'Đắc Nhân Tâm', 'TG003', 'TL003', 'NXB001',  0, 'Cuốn', 0.00, 10, 2021, 'Sách kỹ năng hay nhất mọi thời đại', 1),
-('SP004', '', 'Cho Tôi Xin Một Vé Đi Tuổi Thơ', 'TG001', 'TL001', 'NXB001',  0, 'Cuốn', 0.00, 10, 2018, 'Ký ức tuổi thơ đầy xúc động', 1),
-('SP005', '', 'Quẳng Gánh Lo Đi Và Vui Sống', 'TG003', 'TL003', 'NXB001',  0, 'Cuốn', 0.00, 10, 2020, 'Sách truyền cảm hứng sống tích cực', 1),
-('SP006', '', 'Tôi Thấy Hoa Vàng Trên Cỏ Xanh', 'TG001', 'TL001', 'NXB001', 35, 'Cuốn', 110000.00, 10, 2022, 'Truyện dài của Nguyễn Nhật Ánh', 1),
-('SP007', '', 'Doraemon tập 1', 'TG002', 'TL002', 'NXB002', 98, 'Cuốn',  22000.00, 10, 2023, 'Manga kinh điển', 1);
+('SP004', 'cho-toi-xin-1-ve-di-tuoi-tho.jpg', 'Cho Tôi Xin Một Vé Đi Tuổi Thơ', 'TG001', 'TL001', 'NXB001',  0, 'Cuốn', 0.00, 10, 2018, 'Ký ức tuổi thơ đầy xúc động', 1),
+('SP005', 'quang-ganh-lo-di-va-vui-song.jpg', 'Quẳng Gánh Lo Đi Và Vui Sống', 'TG003', 'TL003', 'NXB001',  0, 'Cuốn', 0.00, 10, 2020, 'Sách truyền cảm hứng sống tích cực', 1),
+('SP006', 'toi-thay-hoa-vang-tren-co-xanh.jpg', 'Tôi Thấy Hoa Vàng Trên Cỏ Xanh', 'TG001', 'TL001', 'NXB001', 35, 'Cuốn', 110000.00, 10, 2022, 'Truyện dài của Nguyễn Nhật Ánh', 1),
+('SP007', 'doraemon-1.jpg', 'Doraemon tập 1', 'TG002', 'TL002', 'NXB002', 98, 'Cuốn',  22000.00, 10, 2023, 'Manga kinh điển', 1);
 -- --------------------------------------------------------
 
 --
