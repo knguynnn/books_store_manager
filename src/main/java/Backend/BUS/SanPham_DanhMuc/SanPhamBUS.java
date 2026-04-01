@@ -2,6 +2,7 @@ package Backend.BUS.SanPham_DanhMuc;
 
 import Backend.DAO.SanPham_DanhMuc.SanPhamDAO;
 import Backend.DTO.SanPham_DanhMuc.SanPhamDTO;
+import Backend.DTO.SanPham_DanhMuc.TacGiaDTO;
 import Backend.BUS.NCC_NhapHang.CTPhieuNhapHangBUS;
 import java.util.ArrayList;
 
@@ -267,4 +268,30 @@ public class SanPhamBUS {
         if (cell == null) return 0;
         try { return cell.getNumericCellValue(); } catch (Exception e) { return 0; }
     }
+
+
+
+
+    // private void thongKeTG() {
+    //     ArrayList<TacGiaDTO> listTG= tgBUS.getAll();
+    //     int temp = listTG.size();
+    //     int[] soLuong=new int[temp];
+
+    //     for (int i=0; i<temp; i++) {
+    //         String matg=listTG.get(i).getMaTG();
+    //         int count=0;
+
+    //         for (SanPhamDTO sp : listSP) 
+    //             if (sp.getMaSP().equals(matg))
+    //                 count++;
+
+    //         soLuong[i]=count;
+    //     }
+        
+    //     for (int i=0; i<temp; i++) {
+    //         String hoVatenTG=listTG.get(i).getHoTG()+' '+listTG.get(i).getTenTG();
+    //         System.out.println("Tác giả: "+hoVatenTG+"- Số lượng sách: "+soLuong[i]);
+    //     }
+        
+    // }
 }
