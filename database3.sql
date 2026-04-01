@@ -206,4 +206,20 @@ INSERT INTO `ctphieunhaphang` (`MaPhieuNhap`, `MaSP`, `SL`, `DonGia`, `ThanhTien
 ('PN008', 'SP021', 12,  74000.00,  888000.00),  -- Đầu Bếp Vũ Trụ
 ('PN008', 'SP024', 35,  96000.00, 3360000.00);  -- Tiếng Anh Giao Tiếp
 
+INSERT INTO `khuyenmai` (`MaKM`, `TenKM`, `NgayBatDau`, `NgayKetThuc`, `LoaiKM`, `GiaTri`, `DieuKien`, `TrangThai`) VALUES
+('KM002', 'Khuyến mãi Tựu Trường', '2026-08-15 00:00:00', '2026-09-15 23:59:59', 'GIAM_HD', 15, 300000.00, 1),
+('KM003', 'Siêu Sale Ngày Đôi 10/10', '2026-10-10 00:00:00', '2026-10-10 23:59:59', 'GIAM_HD', 20, 1000000.00, 1),
+('KM004', 'Ưu đãi Black Friday', '2026-11-20 00:00:00', '2026-11-30 23:59:59', 'GIAM_HD', 25, 500000.00, 1),
+('KM005', 'Mừng Giáng Sinh', '2026-12-20 00:00:00', '2026-12-26 23:59:59', 'GIAM_SP', 10, 0.00, 1),
+('KM006', 'Lì xì Năm Mới', '2027-01-01 00:00:00', '2027-01-10 23:59:59', 'GIAM_HD', 50000, 500000.00, 1);
+
+-- 2. THIẾT LẬP CHI TIẾT KHUYẾN MÃI CHO SẢN PHẨM (Áp dụng cho loại GIAM_SP)
+-- Ví dụ: KM005 áp dụng cho các sản phẩm từ SP008 đến SP012
+INSERT INTO `ctkhuyenmai_sanpham` (`MaKM`, `MaSP`) VALUES
+('KM005', 'SP008'),
+('KM005', 'SP009'),
+('KM005', 'SP010'),
+('KM005', 'SP011'),
+('KM005', 'SP012');
+
 COMMIT;
