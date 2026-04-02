@@ -5,6 +5,8 @@ import Backend.DTO.KhachHang_BanHang.KhachHangDTO;
 import java.sql.*;
 import java.util.ArrayList;
 
+import javax.naming.spi.DirStateFactory.Result;
+
 public class KhachHangDAO {
     
     // Lấy tất cả khách hàng còn hoạt động
@@ -143,7 +145,7 @@ public class KhachHangDAO {
                         rs.getString("MaKH"),
                         rs.getString("HoKH"),
                         rs.getString("TenKH"),
-                        rs.getString("DChi"),  // ← SỬA: DiaChi → DChi
+                        rs.getString("DChi"),  
                         rs.getString("Email"),
                         rs.getString("SDT"),
                         rs.getBoolean("TrangThai")
@@ -154,5 +156,60 @@ public class KhachHangDAO {
             System.out.println("❌ Lỗi tìm kiếm: " + e.getMessage());
         }
         return list;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //them
+    public boolean themKh (KhachHangDTO kh){
+        String sql = "INSERT INTO khachhang (MaKH, HoKH, TenKH, DChi, Email, SDT, TrangThai) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DatabaseHelper.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)){
+
+                ps.setString(1, kh.getMaKH());
+                ps.setString(2, kh.getHoKH());
+                ps.setString(3, kh.getTenKH());
+                ps.setString(4, kh.getDiaChi());
+                ps.setString(5, kh. getEmail());
+                ps.setString(6, kh.getSoDienThoai());
+                ps.setBoolean(7, kh.isTrangThai());
+
+                return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
